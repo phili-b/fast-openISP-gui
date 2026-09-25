@@ -2,8 +2,8 @@ site_name: fast-openISP
 site_description: A fast software image signal processor with a desktop GUI
 site_author: Philippe Baetens
 copyright: "Philippe Baetens · based on fast-openISP by Qiu Jueqin (MIT) and openISP"
-site_url: https://fiepfiep.github.io/fast-openISP-gui/
-repo_url: https://github.com/fiepfiep/fast-openISP-gui
+site_url: https://phili-b.github.io/fast-openISP-gui/
+repo_url: https://github.com/phili-b/fast-openISP-gui
 edit_uri: ""
 
 theme:

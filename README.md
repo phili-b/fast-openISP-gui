@@ -4,8 +4,8 @@
 image, switch ISP blocks on and off, tune every parameter while watching a live preview,
 compare before and after, and export a PNG or JPEG.
 
-[![Documentation](https://img.shields.io/badge/docs-fiepfiep.github.io-3f51b5)](https://fiepfiep.github.io/fast-openISP-gui/)
-[![Release](https://img.shields.io/github/v/release/fiepfiep/fast-openISP-gui)](https://github.com/fiepfiep/fast-openISP-gui/releases/latest)
+[![Documentation](https://img.shields.io/badge/docs-phili--b.github.io-3f51b5)](https://phili-b.github.io/fast-openISP-gui/)
+[![Release](https://img.shields.io/github/v/release/phili-b/fast-openISP-gui)](https://github.com/phili-b/fast-openISP-gui/releases/latest)
 ![Python](https://img.shields.io/badge/python-3.13%2B-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 [![License](https://img.shields.io/badge/license-MIT-green)](#license)
@@ -54,7 +54,7 @@ skin tones, adapts the reference data to the target illuminant, and reports ΔE2
 ## Download
 
 Get `fast-openISP-<version>-win64.zip` from the
-[latest release](https://github.com/fiepfiep/fast-openISP-gui/releases/latest), unzip it and
+[latest release](https://github.com/phili-b/fast-openISP-gui/releases/latest), unzip it and
 run `fast-openISP.exe`. The zip includes sample configs and raw images:
 
 | Sample | Format | Config |
@@ -66,7 +66,7 @@ run `fast-openISP.exe`. The zip includes sample configs and raw images:
 > The exe is not code-signed, so Windows SmartScreen may warn; choose *More info → Run
 > anyway*. The first start takes a few seconds while the exe unpacks itself.
 
-See [Getting started](https://fiepfiep.github.io/fast-openISP-gui/getting-started/) for a
+See [Getting started](https://phili-b.github.io/fast-openISP-gui/getting-started/) for a
 walkthrough.
 
 ## Run from source
@@ -74,7 +74,7 @@ walkthrough.
 Requires [uv](https://docs.astral.sh/uv/), which installs Python 3.13 and all dependencies.
 
 ```bash
-git clone https://github.com/fiepfiep/fast-openISP-gui.git
+git clone https://github.com/phili-b/fast-openISP-gui.git
 cd fast-openISP-gui
 uv sync
 uv run fast-openisp-gui
@@ -123,9 +123,9 @@ Bayer ─► DPC ─► BLC ─► AAF ─► AWB ─► CNF ─► CFA ─► C
 | | | **SCL** | Scaler |
 
 Each block is explained with its equations in
-[**ISP blocks explained**](https://fiepfiep.github.io/fast-openISP-gui/isp-blocks/). Its
+[**ISP blocks explained**](https://phili-b.github.io/fast-openISP-gui/isp-blocks/). Its
 parameters are listed in the
-[module reference](https://fiepfiep.github.io/fast-openISP-gui/modules/).
+[module reference](https://phili-b.github.io/fast-openISP-gui/modules/).
 
 ## Performance
 
@@ -146,16 +146,16 @@ show up within a fraction of a second. Export always runs at full resolution.
 
 | | |
 |---|---|
-| [Getting started](https://fiepfiep.github.io/fast-openISP-gui/getting-started/) | Install, run, first image |
-| [The GUI](https://fiepfiep.github.io/fast-openISP-gui/gui/) | Panels, dependencies, preview, compare, export |
-| [Color calibration](https://fiepfiep.github.io/fast-openISP-gui/calibration/) | Fitting the CCM on a color checker |
-| [ISP blocks explained](https://fiepfiep.github.io/fast-openISP-gui/isp-blocks/) | What each block does, with equations |
-| [Input formats](https://fiepfiep.github.io/fast-openISP-gui/inputs/) | `.raw`, `.tif`, `.dng` details |
-| [Configuration files](https://fiepfiep.github.io/fast-openISP-gui/configuration/) | YAML format and validation |
-| [Command line](https://fiepfiep.github.io/fast-openISP-gui/cli/) | `fast-openisp run / configs / schema` |
-| [Developer guide](https://fiepfiep.github.io/fast-openISP-gui/development/) | Layout, tooling, adding a module |
-| [Building the exe](https://fiepfiep.github.io/fast-openISP-gui/building/) | PyInstaller build and releases |
-| [Release notes](https://fiepfiep.github.io/fast-openISP-gui/release-notes/) | What's new |
+| [Getting started](https://phili-b.github.io/fast-openISP-gui/getting-started/) | Install, run, first image |
+| [The GUI](https://phili-b.github.io/fast-openISP-gui/gui/) | Panels, dependencies, preview, compare, export |
+| [Color calibration](https://phili-b.github.io/fast-openISP-gui/calibration/) | Fitting the CCM on a color checker |
+| [ISP blocks explained](https://phili-b.github.io/fast-openISP-gui/isp-blocks/) | What each block does, with equations |
+| [Input formats](https://phili-b.github.io/fast-openISP-gui/inputs/) | `.raw`, `.tif`, `.dng` details |
+| [Configuration files](https://phili-b.github.io/fast-openISP-gui/configuration/) | YAML format and validation |
+| [Command line](https://phili-b.github.io/fast-openISP-gui/cli/) | `fast-openisp run / configs / schema` |
+| [Developer guide](https://phili-b.github.io/fast-openISP-gui/development/) | Layout, tooling, adding a module |
+| [Building the exe](https://phili-b.github.io/fast-openISP-gui/building/) | PyInstaller build and releases |
+| [Release notes](https://phili-b.github.io/fast-openISP-gui/release-notes/) | What's new |
 
 ## Development
 

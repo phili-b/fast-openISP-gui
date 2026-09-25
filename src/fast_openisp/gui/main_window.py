@@ -78,7 +78,7 @@ CONFIG_EXTENSIONS = (".yaml", ".yml")
 DEBOUNCE_MS = 250
 MAX_RECENT = 8
 DEFAULT_CONFIG = "mikros110"
-PROJECT_URL = "https://fiepfiep.github.io/fast-openISP-gui/"
+PROJECT_URL = "https://phili-b.github.io/fast-openISP-gui/"
 
 
 class Banner(QFrame):

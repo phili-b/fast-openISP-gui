@@ -114,7 +114,7 @@ The zip contains:
 
 ### Documentation
 
-Published at <https://fiepfiep.github.io/fast-openISP-gui/>:
+Published at <https://phili-b.github.io/fast-openISP-gui/>:
 
 - user guide: the GUI, input formats, configuration files, CLI
 - **ISP blocks explained**: each block with its equations, based on the openISP design

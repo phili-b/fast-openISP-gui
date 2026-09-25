@@ -29,8 +29,8 @@ Software image signal processor with a desktop GUI.
 Author: Philippe Baetens
 Based on fast-openISP by Qiu Jueqin (MIT license) and openISP.
 
-Documentation: https://fiepfiep.github.io/fast-openISP-gui/
-Source:        https://github.com/fiepfiep/fast-openISP-gui
+Documentation: https://phili-b.github.io/fast-openISP-gui/
+Source:        https://github.com/phili-b/fast-openISP-gui
 
 Quick start
 -----------

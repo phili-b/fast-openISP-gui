@@ -9,7 +9,7 @@ A software ISP (image signal processor) with a **Windows desktop GUI**, built on
 itself a NumPy reimplementation of [openISP](https://github.com/cruxopen/openISP).
 
 Author of the GUI/packaging work: Philippe Baetens. Docs:
-<https://fiepfiep.github.io/fast-openISP-gui/>.
+<https://phili-b.github.io/fast-openISP-gui/>.
 
 Remotes: `origin` and `mygithub` both point at github.com/phili-b/fast-openISP-gui (the
 repository was renamed from fiepfiep), `gitlab` is the ams-OSRAM internal mirror, and
