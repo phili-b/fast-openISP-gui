@@ -6,6 +6,8 @@ photograph of an **X-Rite / Calibrite ColorChecker Classic** (24 patches).
 
 Open **CCM → Calibrate on color checker…** (or **Config → Calibrate CCM on color checker…**).
 
+![The calibration dialog: the chart outline and the 24 sampling squares on the left, the fit settings and the per-patch ΔE table on the right](assets/calibration-dialog.png)
+
 ## Before you start
 
 1. **Photograph the chart** filling a good part of the frame, evenly lit, with no specular
@@ -101,7 +103,14 @@ balance is wrong, or the chart is lit by a light source with a spiky spectrum.
 **Apply** writes the matrix into the CCM parameters, exactly as if you had typed it into the
 grid: the preview updates, the title bar shows unsaved changes, and **Config → Save YAML** keeps
 it. The CCM box then shows a reminder of the fit, for example
-*Fitted on 24 patches: mean ΔE 8.42 → 2.11, max 4.90*.
+*Fitted on 24 patches: mean ΔE 10.40 → 2.59, max 6.33*.
+
+The split view (++f4++) shows the result against the untouched input: on the left the raw frame
+with no ISP at all, on the right the full pipeline with the fitted matrix. The CCM is what
+brings the saturated patches to their reference colours; the greys are the work of BLC and AWB
+before it:
+
+![Split view of a color checker: the unprocessed input on the left, the processed image with the fitted matrix on the right](assets/calibration-before-after.png)
 
 ## Limits
 

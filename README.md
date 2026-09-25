@@ -39,6 +39,18 @@ compare before and after, and export a PNG or JPEG.
 - **Single-file `fast-openISP.exe`**: Python doesn't need to be installed. There is also a
   CLI and a typed Python API.
 
+### Color calibration
+
+Fit the color correction matrix on a ColorChecker chart. The split view compares the raw input
+(left) with the processed result using the fitted matrix (right):
+
+![Split view of a color checker: the unprocessed input on the left, the processed image with the fitted matrix on the right](docs/assets/calibration-before-after.png)
+
+The dialog detects the chart (or you drag its corners), weights the fit towards neutrals or
+skin tones, adapts the reference data to the target illuminant, and reports ΔE2000 per patch:
+
+![The calibration dialog](docs/assets/calibration-dialog.png)
+
 ## Download
 
 Get `fast-openISP-<version>-win64.zip` from the

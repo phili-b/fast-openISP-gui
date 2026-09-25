@@ -94,6 +94,8 @@ the chart is detected (or you drag its four corners), you choose what the fit sh
 for, and the dialog reports the ΔE2000 error before and after. See
 [Color calibration](calibration.md).
 
+![The colour checker calibration dialog](assets/calibration-dialog.png)
+
 ### Dead pixel correction (DPC)
 
 When DPC is expanded it reports how many pixels the last run corrected, for example
