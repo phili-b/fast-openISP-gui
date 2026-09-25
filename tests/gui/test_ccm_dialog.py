@@ -190,3 +190,46 @@ def test_dpc_count_is_reported(qtbot: QtBot, window: MainWindow, mikros_path: Pa
         window.panel.boxes["dpc"].enable_box.setChecked(False)
         window.schedule_preview(immediate=True)
     assert report.text() == "–"
+
+
+def test_the_outline_is_remembered(
+    qtbot: QtBot,
+    dialog: CcmCalibrationDialog,
+    chart_image: np.ndarray,
+    chart_saturation: SaturationValues,
+) -> None:
+    moved = dialog.overlay.quad.moved(0, (12.0, 34.0))
+    dialog.overlay.set_quad(moved)
+    settings = dialog.settings()
+    stored = settings["quad"]
+    assert isinstance(stored, list)
+    assert stored[:2] == pytest.approx([12.0 / 600, 34.0 / 400])
+
+    again = CcmCalibrationDialog(chart_image, chart_saturation, IDENTITY_CCM, settings)
+    qtbot.addWidget(again)
+    assert np.array(again.overlay.quad.corners) == pytest.approx(np.array(moved.corners))
+    assert "restored" in again.status_label.text()
+
+
+def test_a_stored_outline_rescales_to_a_bigger_image(
+    qtbot: QtBot,
+    dialog: CcmCalibrationDialog,
+    chart_factory: Callable[..., np.ndarray],
+    chart_saturation: SaturationValues,
+) -> None:
+    settings = dialog.settings()
+    bigger = chart_factory(size=(800, 1200))
+    again = CcmCalibrationDialog(bigger, chart_saturation, IDENTITY_CCM, settings)
+    qtbot.addWidget(again)
+    assert np.array(again.overlay.quad.corners[2]) == pytest.approx(np.array([1200.0, 800.0]))
+    assert again.fit is not None
+
+
+def test_a_junk_outline_falls_back_to_detection(
+    qtbot: QtBot, chart_image: np.ndarray, chart_saturation: SaturationValues
+) -> None:
+    settings: dict[str, object] = {"quad": [0.0] * 8}  # collapsed, so unusable
+    again = CcmCalibrationDialog(chart_image, chart_saturation, IDENTITY_CCM, settings)
+    qtbot.addWidget(again)
+    assert "detected" in again.status_label.text()
+    assert again.overlay.quad.area() > 0.5 * chart_image.shape[0] * chart_image.shape[1]

@@ -74,6 +74,13 @@ class ChartQuad:
     ]
 
     @classmethod
+    def from_corners(cls, points: np.ndarray) -> ChartQuad:
+        """Build a quad from four points that are already in chart order."""
+        values = np.asarray(points, dtype=np.float64).reshape(4, 2)
+        corners = [(float(x), float(y)) for x, y in values]
+        return cls((corners[0], corners[1], corners[2], corners[3]))
+
+    @classmethod
     def from_points(cls, points: np.ndarray) -> ChartQuad:
         """Build a quad from four unordered points, assuming an upright chart."""
         pts = np.asarray(points, dtype=np.float64).reshape(4, 2)
@@ -115,6 +122,36 @@ class ChartQuad:
         """Copy rotated a quarter turn, for a chart that is not in landscape orientation."""
         a, b, c, d = self.corners
         return ChartQuad((b, c, d, a))
+
+    def scaled(self, factor: float) -> ChartQuad:
+        """Copy with every corner multiplied by ``factor``."""
+        corners = [(x * factor, y * factor) for x, y in self.corners]
+        return ChartQuad((corners[0], corners[1], corners[2], corners[3]))
+
+    def normalised(self, width: int, height: int) -> list[float]:
+        """Corners as fractions of the image size, for storing between sessions."""
+        return [value for x, y in self.corners for value in (x / width, y / height)]
+
+    @classmethod
+    def from_normalised(cls, values: object, width: int, height: int) -> ChartQuad | None:
+        """Inverse of :meth:`normalised`; ``None`` when the stored value is unusable.
+
+        ``values`` comes straight from stored settings, so it is validated rather than typed.
+        """
+        if not isinstance(values, list) or len(values) != 8:
+            return None
+        try:
+            numbers = [float(value) for value in values]
+        except (TypeError, ValueError):
+            return None
+        if not all(-0.5 <= value <= 1.5 for value in numbers):
+            return None
+        points = [(numbers[index] * width, numbers[index + 1] * height) for index in range(0, 8, 2)]
+        return cls((points[0], points[1], points[2], points[3]))
+
+    def area(self) -> float:
+        """Polygon area in square pixels; a collapsed outline has (nearly) none."""
+        return float(abs(cv2.contourArea(self.array)))
 
     @property
     def array(self) -> np.ndarray:
@@ -162,22 +199,75 @@ class ChartQuad:
         return np.array(polygons)
 
 
+DETECTION_MAX_EDGE = 1600
+"""The detector is run on an image no larger than this; the result is scaled back up."""
+
+
+def _quad_from_patches(charts: np.ndarray) -> ChartQuad | None:
+    """Build the quad from the detector's per-patch corners.
+
+    ``CChecker.getBox()`` outlines the whole chart including its frame, which puts the sampling
+    squares off-centre. The four corners of every patch are exact, so the quad is derived from
+    the centres of the corner patches instead and extrapolated to the patch grid's border.
+    """
+    points = np.asarray(charts, dtype=np.float64).reshape(-1, 2)
+    if points.shape[0] != 4 * CHART_ROWS * CHART_COLS:
+        return None
+    centres = points.reshape(CHART_ROWS * CHART_COLS, 4, 2).mean(axis=1)
+    corners = (0, CHART_COLS - 1, (CHART_ROWS - 1) * CHART_COLS, CHART_ROWS * CHART_COLS - 1)
+    unit = np.array(
+        [
+            [(index % CHART_COLS + 0.5) / CHART_COLS, (index // CHART_COLS + 0.5) / CHART_ROWS]
+            for index in corners
+        ],
+        dtype=np.float32,
+    )
+    transform = cv2.getPerspectiveTransform(unit, centres[list(corners)].astype(np.float32))
+    box = cv2.perspectiveTransform(_UNIT_SQUARE.reshape(-1, 1, 2).astype(np.float64), transform)
+    return ChartQuad.from_corners(box.reshape(4, 2))
+
+
+def _stretch(image8: np.ndarray) -> np.ndarray:
+    """Per-channel percentile stretch, so a flat or strongly tinted raw still shows contrast."""
+    out = np.empty_like(image8)
+    for channel in range(3):
+        low, high = np.percentile(image8[..., channel], (1.0, 99.0))
+        if high - low < 1:
+            low, high = 0.0, 255.0
+        scaled = (image8[..., channel].astype(np.float32) - low) * (255.0 / (high - low))
+        out[..., channel] = np.clip(scaled, 0, 255).astype(np.uint8)
+    return out
+
+
 def detect_chart(image8: np.ndarray) -> ChartQuad | None:
     """Locate a ColorChecker Classic with OpenCV's ``mcc`` detector.
 
-    ``image8`` is an 8-bit RGB image. Returns ``None`` when no chart is found, or when the
-    installed OpenCV has no ``mcc`` module.
+    ``image8`` is a gamma-encoded 8-bit RGB image. Raw material is often flat and strongly
+    tinted, so the plain image is tried first and a contrast-stretched copy second. Large images
+    are scaled down for the search and the result is scaled back. Returns ``None`` when no chart
+    is found, or when the installed OpenCV has no ``mcc`` module.
     """
     if not hasattr(cv2, "mcc"):
         return None
-    bgr = cv2.cvtColor(image8, cv2.COLOR_RGB2BGR)
-    detector = cv2.mcc.CCheckerDetector.create()
-    if not detector.process(bgr, cv2.mcc.MCC24):
-        return None
-    checker = detector.getBestColorChecker()
-    if checker is None:
-        return None
-    return ChartQuad.from_points(np.array(checker.getBox()))
+
+    factor = min(1.0, DETECTION_MAX_EDGE / max(image8.shape[:2]))
+    search = image8
+    if factor < 1.0:
+        search = cv2.resize(image8, None, fx=factor, fy=factor, interpolation=cv2.INTER_AREA)
+
+    for candidate in (search, _stretch(search)):
+        detector = cv2.mcc.CCheckerDetector.create()
+        detector.setColorChartType(cv2.mcc.MCC24)  # without this the detector looks for nothing
+        if not detector.process(cv2.cvtColor(candidate, cv2.COLOR_RGB2BGR), 1):
+            continue
+        checker = detector.getBestColorChecker()
+        if checker is None:
+            continue
+        quad = _quad_from_patches(np.array(checker.getColorCharts()))
+        if quad is None:
+            quad = ChartQuad.from_points(np.array(checker.getBox()))
+        return quad if factor == 1.0 else quad.scaled(1 / factor)
+    return None
 
 
 @dataclass(frozen=True)

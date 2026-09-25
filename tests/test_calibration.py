@@ -8,9 +8,11 @@ import numpy as np
 import pytest
 
 from fast_openisp.calibration import (
+    CHART_COLS,
     CalibrationError,
     ChartQuad,
     apply_matrix,
+    detect_chart,
     fit_ccm,
     sample_patches,
 )
@@ -24,6 +26,7 @@ from fast_openisp.color import (
     white_xyz,
 )
 from fast_openisp.config import IDENTITY_CCM, IspConfig
+from fast_openisp.imaging import render_linear
 from fast_openisp.modules.base import Context, PipelineData, SaturationValues
 from fast_openisp.modules.ccm import CCM
 from fast_openisp.pipeline import Pipeline
@@ -242,3 +245,68 @@ def test_dpc_reports_the_number_of_corrected_pixels() -> None:
     result = Pipeline(_small_config()).execute(bayer)
     assert result.stats["dpc_corrected"] == len(hot)
     assert result.stats["dpc_total"] == bayer.size
+
+
+# ------------------------------------------------------------- detection
+def test_detect_finds_the_synthetic_chart(
+    chart_image: np.ndarray, chart_quad: QuadFactory, chart_saturation: SaturationValues
+) -> None:
+    """The detector needs a gamma-encoded image; it is fed the same render as the dialog."""
+    preview = render_linear(chart_image, chart_saturation.hdr)
+    quad = detect_chart(preview)
+    assert quad is not None
+
+    # The synthetic chart fills the frame, so the outline must too
+    assert quad.area() > 0.9 * chart_image.shape[0] * chart_image.shape[1]
+    # Within an eighth of a cell of the ideal grid (the synthetic patches have no gaps
+    # between them, so the detector's patch corners are looser than on a real chart)
+    cell = chart_image.shape[1] / CHART_COLS
+    centres = quad.patch_centres()
+    expected = chart_quad(chart_image).patch_centres()
+    assert centres == pytest.approx(expected, abs=cell / 8)
+
+
+def test_detected_quad_fits_the_matrix(
+    chart_image: np.ndarray, chart_matrix: np.ndarray, chart_saturation: SaturationValues
+) -> None:
+    quad = detect_chart(render_linear(chart_image, chart_saturation.hdr))
+    assert quad is not None
+    samples = sample_patches(chart_image, quad, saturation=chart_saturation)
+    fit = fit_ccm(samples, saturation=chart_saturation)
+    assert np.array(fit.matrix)[:, :3] == pytest.approx(chart_matrix, abs=0.05)
+    assert fit.mean_after < 1.0
+
+
+def test_detection_survives_a_downscaled_search(
+    chart_factory: Callable[..., np.ndarray], chart_saturation: SaturationValues
+) -> None:
+    """A chart larger than DETECTION_MAX_EDGE is searched small and scaled back up."""
+    big = chart_factory(size=(1400, 2100))
+    quad = detect_chart(render_linear(big, chart_saturation.hdr))
+    assert quad is not None
+    assert quad.area() > 0.9 * big.shape[0] * big.shape[1]
+
+
+# ------------------------------------------------- remembering the outline
+def test_quad_survives_a_normalised_round_trip() -> None:
+    quad = ChartQuad(((10.0, 20.0), (600.0, 30.0), (590.0, 400.0), (20.0, 390.0)))
+    stored = quad.normalised(640, 480)
+    assert all(0.0 <= value <= 1.0 for value in stored)
+    assert ChartQuad.from_normalised(stored, 640, 480) == quad
+
+
+def test_normalised_quad_rescales_to_another_image_size() -> None:
+    quad = ChartQuad(((0.0, 0.0), (640.0, 0.0), (640.0, 480.0), (0.0, 480.0)))
+    restored = ChartQuad.from_normalised(quad.normalised(640, 480), 1280, 960)
+    assert restored is not None
+    assert restored.corners == ((0.0, 0.0), (1280.0, 0.0), (1280.0, 960.0), (0.0, 960.0))
+
+
+@pytest.mark.parametrize("stored", [None, "nonsense", [1.0, 2.0], [9.0] * 8, ["x"] * 8])
+def test_unusable_stored_quads_are_rejected(stored: object) -> None:
+    assert ChartQuad.from_normalised(stored, 640, 480) is None
+
+
+def test_area_reports_a_collapsed_outline() -> None:
+    assert ChartQuad.centred(600, 400).area() > 10_000
+    assert ChartQuad(((0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0))).area() < 2

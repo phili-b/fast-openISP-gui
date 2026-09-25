@@ -520,7 +520,6 @@ class MainWindow(QMainWindow):
             f"{calibration.mean_before:.2f} → {calibration.mean_after:.2f}, "
             f"max {calibration.max_after:.2f}"
         )
-        self.settings.setValue("ccm/settings", json.dumps(calibration.settings))
         if not self.config.modules.ccm.enabled:
             self.banner.show_message("The matrix was applied, but CCM itself is switched off.")
 
@@ -537,9 +536,10 @@ class MainWindow(QMainWindow):
         except ValueError:
             settings = {}
         dialog = CcmCalibrationDialog(linear_rgb, saturation, current, settings, parent=self)
-        if dialog.exec() != CcmCalibrationDialog.DialogCode.Accepted:
-            return None
-        return dialog.result_calibration()
+        accepted = dialog.exec() == CcmCalibrationDialog.DialogCode.Accepted
+        # Remember the outline and the fit settings even when the dialog is cancelled
+        self.settings.setValue("ccm/settings", json.dumps(dialog.settings()))
+        return dialog.result_calibration() if accepted else None
 
     def _on_config_edited(self, config: IspConfig) -> None:
         self.config = config

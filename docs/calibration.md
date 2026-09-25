@@ -24,9 +24,14 @@ as accurate as possible.
 
 ## Locating the chart
 
-The dialog tries OpenCV's chart detector as soon as it opens. Whatever it finds (or a default
-rectangle if it finds nothing) is drawn as an outline with four yellow corner handles and a
-6 × 4 grid of sampling squares, numbered in reading order.
+When the dialog opens it uses, in this order: **the outline from your last calibration**, an
+automatic detection, or a default rectangle in the middle of the image. The outline is drawn
+with four yellow corner handles and a 6 × 4 grid of sampling squares, numbered in reading order.
+The status line at the bottom says which of the three you got.
+
+The remembered outline is stored as fractions of the image size, so it still lands on the chart
+when the next image has a different resolution — handy when you shoot a series with the chart
+in a fixed position. It is kept even if you cancel the dialog.
 
 | Control | What it does |
 |---|---|
@@ -38,6 +43,14 @@ rectangle if it finds nothing) is drawn as an outline with four yellow corner ha
 
 Patch **1** must be *dark skin* (the brown patch) and patch **19** the white one. If the numbers
 in the overlay do not match the chart, use **Rotate 90°**.
+
+!!! note "How the detector sees a raw image"
+    Raw material is flat and often strongly tinted, so the detector is given the gamma-encoded
+    render you see, and a contrast-stretched copy of it if that fails. Large images are searched
+    at reduced size. The outline comes from the detector's own patch corners rather than the
+    chart's outer border, so the sampling squares sit centred on the patches. If detection still
+    fails — an extreme colour cast, a chart at a steep angle, or poor lighting — just drag the
+    four corners; that path is exact.
 
 **Patch scale** sets how much of each cell is averaged, from 20 % to 90 % of the cell. Smaller
 is safer when the outline is slightly off or the chart is photographed at an angle; larger

@@ -10,6 +10,8 @@ See [Color calibration](calibration.md).
 - The chart is located automatically with OpenCV's `mcc` detector; its outline and the 24
   sampling squares are drawn over the image and every corner can be dragged. **Rotate 90°**
   fixes a chart that is not in landscape orientation.
+- The outline is **remembered between calibrations**, stored relative to the image size so it
+  still fits when the next image has another resolution.
 - **Patch scale** (20-90 %) sets how much of each cell is averaged.
 - The fit can be weighted: *All patches*, *Neutrals (grey ramp)*, *Neutrals only*, *Skin tones*,
   or any per-patch weight typed into the table.

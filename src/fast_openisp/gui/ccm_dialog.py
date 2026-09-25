@@ -44,6 +44,7 @@ from fast_openisp.color import CAT_METHODS, ILLUMINANTS, WEIGHT_PRESETS, Referen
 from fast_openisp.color import reference_targets as build_targets
 from fast_openisp.config import IDENTITY_CCM, CcmRow
 from fast_openisp.gui.image_view import numpy_to_qimage
+from fast_openisp.imaging import render_linear
 from fast_openisp.modules.base import SaturationValues
 
 CAT_LABELS: dict[str, str] = {
@@ -71,8 +72,7 @@ class CcmCalibration:
 
 def render_preview(linear_rgb: np.ndarray, saturation: SaturationValues) -> np.ndarray:
     """Gamma-encoded 8-bit view of the linear RGB the CCM module receives."""
-    normalised = np.clip(linear_rgb.astype(np.float32) / saturation.hdr, 0.0, 1.0)
-    return (255 * normalised ** (1 / 2.2)).astype(np.uint8)
+    return render_linear(linear_rgb, saturation.hdr)
 
 
 class _CornerHandle(QGraphicsEllipseItem):
@@ -249,13 +249,22 @@ class CcmCalibrationDialog(QDialog):
         self._restore(settings or {})
         self.overlay = ChartOverlay(self.scene, self._on_overlay_changed)
         self.scene.addItem(self.overlay)
-        height, width = linear_rgb.shape[:2]
-        detected = detect_chart(self.preview)
-        self.overlay.set_quad(detected or ChartQuad.centred(width, height), notify=False)
+        quad, message = self._initial_quad(settings or {})
+        self.overlay.set_quad(quad, notify=False)
         self.view.fitInView(self.scene.itemsBoundingRect(), Qt.AspectRatioMode.KeepAspectRatio)
-        if detected is None:
-            self.status_label.setText("No chart detected - drag the corners onto the chart.")
+        self.status_label.setText(message)
         self._refit()
+
+    def _initial_quad(self, settings: dict[str, object]) -> tuple[ChartQuad, str]:
+        """Where to put the outline: the remembered position, a detection, or the default."""
+        height, width = self.linear_rgb.shape[:2]
+        stored = ChartQuad.from_normalised(settings.get("quad"), width, height)
+        if stored is not None and stored.area() > 0.01 * width * height:
+            return stored, "Outline restored from the last calibration."
+        detected = detect_chart(self.preview)
+        if detected is not None:
+            return detected, "Chart detected."
+        return ChartQuad.centred(width, height), "No chart detected - drag the corners onto it."
 
     # ----------------------------------------------------------------- UI
     def _build_controls(self) -> QVBoxLayout:
@@ -478,7 +487,9 @@ class CcmCalibrationDialog(QDialog):
 
     # ------------------------------------------------------------- result
     def settings(self) -> dict[str, object]:
+        height, width = self.linear_rgb.shape[:2]
         return {
+            "quad": self.overlay.quad.normalised(width, height),
             "preset": self.preset_combo.currentText(),
             "illuminant": self.illuminant_combo.currentText(),
             "cat": str(self.cat_combo.currentData()),

@@ -59,3 +59,9 @@ def render_before(bayer: np.ndarray, bit_depth: int, pattern: BayerPattern) -> n
     rgb8 = (rgb * 255 + 0.5).astype(np.uint8)
     height, width = bayer.shape[:2]
     return np.asarray(cv2.resize(rgb8, (width, height), interpolation=cv2.INTER_LINEAR))
+
+
+def render_linear(linear_rgb: np.ndarray, saturation: int) -> np.ndarray:
+    """Gamma-encoded 8-bit view of a linear RGB image, for display and chart detection."""
+    normalised = np.clip(linear_rgb.astype(np.float32) / saturation, 0.0, 1.0)
+    return (255 * normalised ** (1 / 2.2) + 0.5).astype(np.uint8)
