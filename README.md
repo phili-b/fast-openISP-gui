@@ -12,7 +12,7 @@ compare before and after, and export a PNG or JPEG.
 
 ![fast-openISP GUI processing a 12-bit GRBG DNG of a color checker](docs/assets/screenshot.png)
 
-📖 **Documentation:** <https://fiepfiep.github.io/fast-openISP-gui/>
+📖 **Documentation:** <https://phili-b.github.io/fast-openISP-gui/>
 
 ---
 
