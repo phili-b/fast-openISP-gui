@@ -35,14 +35,17 @@ PowerShell only: `.\scripts\build_exe.ps1` (single-file exe + self-test),
 src/fast_openisp/
   config.py     Pydantic config models, YAML load/save, MODULE_INFO (order + dependencies),
                 legacy-format migration
-  pipeline.py   Pipeline, PipelineResult, saturation values, final RGB rendering
+  pipeline.py   Pipeline, PipelineResult, saturation values, final RGB rendering;
+                run_until(bayer, module) gives the calibration the pre-CCM data
+  color.py      illuminants, CAT matrices, Lab, CIEDE2000, ColorChecker reference data
+  calibration.py chart geometry, patch sampling and the cv2.ccm fit (no Qt)
   imaging.py    YCbCr→RGB, CFA-preserving preview downscale, "before" rendering
   modules/      one file per ISP block; base.py has ISPModule/PipelineData/Context/to_fixed
   configs/      bundled YAML (package data)
   io/           loaders.py (.raw/.tif/.dng → RawImage), export.py (PNG/JPEG)
   cli.py, selftest.py
   gui/          app.py, main_window.py, module_panel.py, param_widgets.py, image_view.py,
-                worker.py, import_dialog.py, export_dialog.py, resources/
+                worker.py, import_dialog.py, export_dialog.py, ccm_dialog.py, resources/
 tests/          test_regression.py + golden/ reference PNGs; gui/ (pytest-qt)
 docs/           mkdocs-material site; hooks.py generates the module reference
 scripts/        build_exe.ps1, package_release.ps1, make_icon.py, release_notes.py
@@ -66,6 +69,12 @@ fast_openisp.spec   PyInstaller (one-file, windowed, splash)
   headerless `.raw`), so one config works for preview and full resolution.
 - **GUI threading**: previews run on a single-thread `QThreadPool`; a newer request cancels
   the running one (checked between modules), stale results are dropped by generation counter.
+- **OpenCV does the colour maths** where it has an API (`cv2.ccm` for the fit, `cv2.mcc` for
+  chart detection, `cv2.cvtColor`/`cv2.transform`, `cv2.getPerspectiveTransform`). Only the
+  CAT matrices and CIEDE2000 are hand-written, in `color.py`. Note OpenCV 5.0's weighted
+  `CCM_AFFINE` path crashes, so weights are applied by repeating patches.
+- Per-run measurements (AWB gains, DPC pixel count) go through `PipelineData.extras` ->
+  `PipelineResult.stats` -> `ModulePanel.set_stats`, never through the config.
 - Adding a module: params model → `MODULE_INFO` → `ModulesConfig` field → `modules/xxx.py`
   (`ISPModule[XxxParams]`, `name`, `execute`) → register in `modules/__init__.py`. Keep
   pipeline order consistent everywhere.
@@ -100,6 +109,8 @@ with those notes and a SHA-256. `ci.yml` runs lint/type/tests/docs/exe on pushes
 | `raw/test.RAW` | 1920 × 1080, 10-bit headerless, RGGB |
 | `raw/mira220_rgb.dng` | 1600 × 1400, 12-bit DNG, GRBG, black level 156 |
 | `raw/color_checker.pgm` | PGM — **not a supported input** |
+
+`raw/mira220_rgb.dng` is a ColorChecker shot: use it to test the CCM calibration.
 
 ## Open items
 

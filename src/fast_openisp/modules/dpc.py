@@ -19,6 +19,7 @@ class DPC(ISPModule[DPCParams]):
         padded_sub_arrays = split_bayer(padded_bayer, self.ctx.bayer_pattern)
 
         dpc_sub_arrays = []
+        corrected = 0
         for padded_array in padded_sub_arrays:
             s = shift_array(padded_array, window_size=3)
             center = s[4]
@@ -38,7 +39,10 @@ class DPC(ISPModule[DPCParams]):
             )
             dpc_array = np.take_along_axis(neighbor_stack, indices, axis=2).squeeze(2)
             dpc_sub_arrays.append(mask * dpc_array + ~mask * center)
+            corrected += int(np.count_nonzero(mask))
 
         dpc_bayer = reconstruct_bayer(dpc_sub_arrays, self.ctx.bayer_pattern)
 
         data.bayer = dpc_bayer.astype(np.uint16)
+        data.extras["dpc_corrected"] = corrected
+        data.extras["dpc_total"] = int(bayer.size)

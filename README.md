@@ -30,6 +30,10 @@ compare before and after, and export a PNG or JPEG.
 - **Before/after** comparison with a draggable split view (F2 / F3 / F4, or hold **B**).
 - **Export** full-resolution PNG or JPEG, optionally with the YAML config alongside.
 - **Grey-world auto white balance** for uncalibrated sensors, with *Freeze as manual*.
+- **CCM calibration on a color checker**: the chart is detected automatically (or you drag
+  its corners), the fit can be weighted towards neutrals or skin tones, the target illuminant
+  is reached with a chromatic adaptation transform, and the ΔE2000 error is reported per patch
+  before and after.
 - **YAML configurations checked with Pydantic**: typos and out-of-range values are reported
   by field name. Configs in the original fast-openISP format are converted automatically.
 - **Single-file `fast-openISP.exe`**: Python doesn't need to be installed. There is also a
@@ -132,6 +136,7 @@ show up within a fraction of a second. Export always runs at full resolution.
 |---|---|
 | [Getting started](https://fiepfiep.github.io/fast-openISP-gui/getting-started/) | Install, run, first image |
 | [The GUI](https://fiepfiep.github.io/fast-openISP-gui/gui/) | Panels, dependencies, preview, compare, export |
+| [Color calibration](https://fiepfiep.github.io/fast-openISP-gui/calibration/) | Fitting the CCM on a color checker |
 | [ISP blocks explained](https://fiepfiep.github.io/fast-openISP-gui/isp-blocks/) | What each block does, with equations |
 | [Input formats](https://fiepfiep.github.io/fast-openISP-gui/inputs/) | `.raw`, `.tif`, `.dng` details |
 | [Configuration files](https://fiepfiep.github.io/fast-openISP-gui/configuration/) | YAML format and validation |

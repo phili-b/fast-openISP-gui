@@ -80,6 +80,8 @@ plain mean filter; the gradient method preserves edges better.
 |---|---|
 | `diff_threshold` | Lower catches more defects, but risks smoothing fine texture |
 
+The GUI shows how many pixels were corrected in the last run when the DPC module is expanded.
+
 ### BLC — Black Level Compensation
 
 **Why.** Even with no light, zero exposure time and minimum gain, the sensor's readout circuit
@@ -245,8 +247,9 @@ $$
 
 If each row sums to 1, neutral greys stay neutral. Off-diagonal entries are usually negative:
 they subtract the crosstalk between channels and increase saturation. A CCM is normally
-fitted by least squares on a color checker photographed after white balance. For sensors
-without calibration, such as `mikros110`, use the identity matrix.
+fitted by least squares on a color checker photographed after white balance, which the GUI can
+do for you - see [Color calibration](calibration.md). For an uncalibrated sensor, such as
+`mikros110`, start from the identity matrix.
 
 openISP also mentions **3D lookup tables** (for example 33 × 33 × 33 with trilinear
 interpolation) as a more flexible alternative. They are not implemented here.

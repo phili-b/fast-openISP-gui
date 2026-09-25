@@ -186,7 +186,7 @@ wheels = [
 
 [[package]]
 name = "fast-openisp"
-version = "0.0.1"
+version = "0.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "numpy" },
@@ -215,7 +215,7 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "numpy", specifier = ">=2.2" },
-    { name = "opencv-python-headless", specifier = ">=4.10" },
+    { name = "opencv-python-headless", specifier = ">=5.0" },
     { name = "pydantic", specifier = ">=2.9" },
     { name = "pyside6-essentials", specifier = ">=6.8" },
     { name = "pyyaml", specifier = ">=6.0" },

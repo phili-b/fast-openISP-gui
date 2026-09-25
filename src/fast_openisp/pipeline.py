@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from fast_openisp.config import ConfigError, IspConfig
+from fast_openisp.config import MODULE_ORDER, ConfigError, IspConfig
 from fast_openisp.imaging import ycbcr_to_rgb
 from fast_openisp.modules import (
     MODULE_CLASSES,
@@ -44,6 +44,8 @@ class PipelineResult:
     """White-balance gains (R, Gr, Gb, B) that AWB applied."""
     timings: dict[str, float] = field(default_factory=dict)
     """Seconds spent per module."""
+    stats: dict[str, object] = field(default_factory=dict)
+    """Per-module measurements reported by the run, such as ``dpc_corrected``."""
 
     @property
     def elapsed(self) -> float:
@@ -106,24 +108,28 @@ class Pipeline:
             for name in config.modules.enabled_names()
         }
 
-    def execute(
+    def _run_modules(
         self,
         bayer: np.ndarray,
         *,
+        stop_before: str | None = None,
         progress: ProgressCallback | None = None,
         cancel: CancelCallback | None = None,
-    ) -> PipelineResult:
-        """Run all enabled modules on ``bayer`` (``(H, W)`` integer array, even dimensions)."""
+    ) -> tuple[PipelineData, dict[str, float]]:
         if bayer.ndim != 2:
             raise PipelineError(f"Expected a 2-D Bayer array, got shape {bayer.shape}")
         if bayer.shape[0] % 2 or bayer.shape[1] % 2:
             raise PipelineError(f"Bayer dimensions must be even, got {bayer.shape}")
 
+        # Compare pipeline positions, not names: a disabled module is not in self.modules
+        limit = MODULE_ORDER.index(stop_before) if stop_before is not None else len(MODULE_ORDER)
         data = PipelineData(bayer=bayer)
         timings: dict[str, float] = {}
         total = len(self.modules)
 
         for index, (name, module) in enumerate(self.modules.items()):
+            if MODULE_ORDER.index(name) >= limit:
+                break
             if cancel is not None and cancel():
                 raise PipelineCancelled
             if progress is not None:
@@ -139,6 +145,30 @@ class Pipeline:
 
         if progress is not None:
             progress("", total, total)
+        return data, timings
+
+    def execute(
+        self,
+        bayer: np.ndarray,
+        *,
+        progress: ProgressCallback | None = None,
+        cancel: CancelCallback | None = None,
+    ) -> PipelineResult:
+        """Run all enabled modules on ``bayer`` (``(H, W)`` integer array, even dimensions)."""
+        data, timings = self._run_modules(bayer, progress=progress, cancel=cancel)
         return PipelineResult(
-            image=render_output(data, self.saturation), awb_gains=data.awb_gains, timings=timings
+            image=render_output(data, self.saturation),
+            awb_gains=data.awb_gains,
+            timings=timings,
+            stats=data.extras,
         )
+
+    def run_until(self, bayer: np.ndarray, module: str) -> PipelineData:
+        """Run only the enabled modules that come before ``module`` in pipeline order.
+
+        Used by the colour checker calibration, which needs the data the CCM module receives.
+        """
+        if module not in MODULE_ORDER:
+            raise PipelineError(f"Unknown module {module!r}")
+        data, _ = self._run_modules(bayer, stop_before=module)
+        return data

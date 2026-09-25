@@ -85,9 +85,21 @@ The chroma noise filter (CNF) automatically uses the gains that AWB applied.
 ### Color correction matrix (CCM)
 
 A 3 × 4 grid: each row is an output channel, the first three columns are the input R, G, B
-weights and the last column is an offset. The **Σ** column shows each row's sum, in orange
-when it is not 1.0 (a row sum of 1.0 keeps neutral greys neutral). **Reset to identity**
-restores the identity matrix.
+weights and the last column is an offset in code values. The **Σ** column shows each row's sum,
+in orange when it is not 1.0 (a row sum of 1.0 keeps neutral greys neutral). **Reset to
+identity** restores the identity matrix.
+
+**Calibrate on color checker…** measures the matrix from a photograph of a ColorChecker chart:
+the chart is detected (or you drag its four corners), you choose what the fit should optimise
+for, and the dialog reports the ΔE2000 error before and after. See
+[Color calibration](calibration.md).
+
+### Dead pixel correction (DPC)
+
+When DPC is expanded it reports how many pixels the last run corrected, for example
+*Corrected 1,284 pixels (0.110 %) · preview 1:2*. The count is measured on the data that was
+processed, so it refers to the downscaled preview unless **View → Full-resolution preview** is
+on. Lower `diff_threshold` to catch more defects and watch the count rise.
 
 ## Preview and performance
 

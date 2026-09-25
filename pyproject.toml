@@ -1,6 +1,6 @@
 [project]
 name = "fast-openisp"
-version = "0.0.1"
+version = "0.3.0"
 description = "Fast software ISP (image signal processor) in Python, with a desktop GUI"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -8,7 +8,7 @@ license = { text = "MIT" }
 authors = [{ name = "Philippe Baetens" }]
 dependencies = [
     "numpy>=2.2",
-    "opencv-python-headless>=4.10",
+    "opencv-python-headless>=5.0",
     "pydantic>=2.9",
     "pyside6-essentials>=6.8",
     "pyyaml>=6.0",

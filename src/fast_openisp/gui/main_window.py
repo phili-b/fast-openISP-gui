@@ -39,12 +39,14 @@ from PySide6.QtWidgets import (
 
 from fast_openisp import __version__
 from fast_openisp.config import (
+    CcmRow,
     ConfigError,
     IspConfig,
     bundled_configs,
     load_config,
     save_config,
 )
+from fast_openisp.gui.ccm_dialog import CcmCalibration, CcmCalibrationDialog
 from fast_openisp.gui.export_dialog import ExportDialog, ExportOptions
 from fast_openisp.gui.image_view import CompareView, ViewMode, numpy_to_qimage
 from fast_openisp.gui.import_dialog import ImportDialog, ImportSettings
@@ -69,6 +71,8 @@ from fast_openisp.io.loaders import (
     load_tiff,
     probe_tiff,
 )
+from fast_openisp.modules.base import SaturationValues
+from fast_openisp.pipeline import Pipeline, PipelineError
 
 CONFIG_EXTENSIONS = (".yaml", ".yml")
 DEBOUNCE_MS = 250
@@ -193,6 +197,7 @@ class MainWindow(QMainWindow):
         self.panel.config_changed.connect(self._on_config_edited)
         self.panel.sensor_changed.connect(self._on_sensor_changed)
         self.panel.reset_requested.connect(self._reset_module)
+        self.panel.calibrate_requested.connect(self._calibrate_module)
         dock = QDockWidget("ISP modules", self)
         dock.setObjectName("modules_dock")
         dock.setWidget(self.panel)
@@ -243,6 +248,12 @@ class MainWindow(QMainWindow):
         config_menu.addSeparator()
         self.as_shot_action = self._action(config_menu, "Use as-shot white balance for DNG")
         self.as_shot_action.setCheckable(True)
+        config_menu.addSeparator()
+        self.calibrate_action = self._action(
+            config_menu,
+            "Calibrate CCM on color checker…",
+            lambda: self._calibrate_module("ccm"),
+        )
 
         view_menu = menu.addMenu("&View")
         self._action(view_menu, "&Fit to window", self.view.fit, "Ctrl+0")
@@ -374,6 +385,7 @@ class MainWindow(QMainWindow):
         has_image = self.raw is not None
         self.export_action.setEnabled(has_image)
         self.export_button.setEnabled(has_image)
+        self.calibrate_action.setEnabled(has_image)
 
     def _set_dirty(self, dirty: bool) -> None:
         self.dirty = dirty
@@ -469,6 +481,65 @@ class MainWindow(QMainWindow):
         self.config = self.config.with_module(name, params)
         self.panel.config = self.config
         self._on_config_edited(self.config)
+
+    def _calibrate_module(self, name: str) -> None:
+        """Fit the CCM on a colour checker in the open image."""
+        if name != "ccm":
+            return
+        if self.raw is None:
+            self.banner.show_message("Open a raw image of a color checker first.")
+            return
+        if not self.config.modules.cfa.enabled:
+            self.banner.show_message("Enable CFA (demosaicing) before calibrating the CCM.")
+            return
+        if not self.config.modules.awb.enabled:
+            self.banner.show_message(
+                "AWB is disabled: the fitted matrix will absorb the white balance."
+            )
+
+        ccm = self.config.modules.ccm
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        self.statusBar().showMessage("Processing the image up to the CCM…")
+        try:
+            pipeline = Pipeline(self.config)
+            data = pipeline.run_until(self.raw.bayer, "ccm")
+            linear_rgb = data.require_rgb()
+        except (ConfigError, PipelineError) as error:
+            QMessageBox.warning(self, "Cannot calibrate", str(error))
+            return
+        finally:
+            QApplication.restoreOverrideCursor()
+            self.statusBar().clearMessage()
+
+        calibration = self.ask_ccm_calibration(linear_rgb, pipeline.saturation, ccm.ccm)
+        if calibration is None:
+            return
+        self.panel.boxes["ccm"].apply_params({"ccm": calibration.matrix})
+        self.panel.boxes["ccm"].set_report(
+            f"Fitted on {calibration.used} patches: mean ΔE "
+            f"{calibration.mean_before:.2f} → {calibration.mean_after:.2f}, "
+            f"max {calibration.max_after:.2f}"
+        )
+        self.settings.setValue("ccm/settings", json.dumps(calibration.settings))
+        if not self.config.modules.ccm.enabled:
+            self.banner.show_message("The matrix was applied, but CCM itself is switched off.")
+
+    def ask_ccm_calibration(
+        self,
+        linear_rgb: np.ndarray,
+        saturation: SaturationValues,
+        current: tuple[CcmRow, CcmRow, CcmRow],
+    ) -> CcmCalibration | None:
+        """Show the calibration dialog (overridden in tests)."""
+        stored = self.settings.value("ccm/settings")
+        try:
+            settings = json.loads(str(stored)) if stored else {}
+        except ValueError:
+            settings = {}
+        dialog = CcmCalibrationDialog(linear_rgb, saturation, current, settings, parent=self)
+        if dialog.exec() != CcmCalibrationDialog.DialogCode.Accepted:
+            return None
+        return dialog.result_calibration()
 
     def _on_config_edited(self, config: IspConfig) -> None:
         self.config = config
@@ -678,6 +749,7 @@ class MainWindow(QMainWindow):
         self.last_image = outcome.result.image
         self.view.set_processed(numpy_to_qimage(outcome.result.image))
         self.panel.set_awb_gains(outcome.result.awb_gains)
+        self.panel.set_stats(outcome.result.stats, preview_factor=outcome.preview_factor)
         self.timing_label.setText(f"{outcome.wall_time * 1000:.0f} ms")
         slowest = sorted(outcome.result.timings.items(), key=lambda kv: -kv[1])[:5]
         self.timing_label.setToolTip(

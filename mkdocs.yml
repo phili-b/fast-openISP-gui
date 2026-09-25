@@ -33,6 +33,7 @@ nav:
   - ISP blocks explained: isp-blocks.md
   - User guide:
       - The GUI: gui.md
+      - Color calibration: calibration.md
       - Input formats: inputs.md
       - Configuration files: configuration.md
       - Module reference: modules.md

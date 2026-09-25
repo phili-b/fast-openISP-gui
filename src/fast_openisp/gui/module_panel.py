@@ -40,6 +40,7 @@ class ModuleBox(QFrame):
     toggled = Signal(str, bool)
     params_edited = Signal(str, object)  # name, ModuleParams
     reset_requested = Signal(str)
+    calibrate_requested = Signal(str)
 
     def __init__(self, name: str, params: ModuleParams, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -105,6 +106,22 @@ class ModuleBox(QFrame):
             form.addRow(freeze)
             self.freeze_button = freeze
             self._last_gains: tuple[float, float, float, float] | None = None
+
+        self.report_label: QLabel | None = None
+        if name in ("ccm", "dpc"):
+            self.report_label = QLabel("–")
+            self.report_label.setObjectName(f"{name}_report")
+            self.report_label.setWordWrap(True)
+            self.report_label.setEnabled(False)
+            form.addRow(self.report_label)
+
+        if name == "ccm":
+            calibrate = QPushButton("Calibrate on color checker…")
+            calibrate.setObjectName("ccm_calibrate")
+            calibrate.setToolTip("Fit this matrix on a photographed ColorChecker chart")
+            calibrate.clicked.connect(lambda: self.calibrate_requested.emit(self.name))
+            form.addRow(calibrate)
+            self.calibrate_button = calibrate
 
         self.error_label = QLabel()
         self.error_label.setStyleSheet("color: #d04040;")
@@ -194,6 +211,17 @@ class ModuleBox(QFrame):
         self.set_params(params)
         self.params_edited.emit(self.name, params)
 
+    def set_report(self, text: str) -> None:
+        """Show a per-run measurement, such as the pixels DPC corrected."""
+        if self.report_label is not None:
+            self.report_label.setText(text)
+
+    def apply_params(self, updates: dict[str, Any]) -> None:
+        """Replace parameter values programmatically and report the change like an edit."""
+        params = type(self.params).model_validate(self.params.model_dump() | updates)
+        self.set_params(params)
+        self.params_edited.emit(self.name, params)
+
 
 class SensorBox(QGroupBox):
     """Hardware settings that affect processing: bit depth and Bayer pattern."""
@@ -238,6 +266,7 @@ class ModulePanel(QScrollArea):
     config_changed = Signal(object)  # IspConfig
     sensor_changed = Signal(int, str)
     reset_requested = Signal(str)
+    calibrate_requested = Signal(str)
 
     def __init__(self, config: IspConfig, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -271,6 +300,7 @@ class ModulePanel(QScrollArea):
             box.toggled.connect(self._on_toggled)
             box.params_edited.connect(self._on_params_edited)
             box.reset_requested.connect(self.reset_requested)
+            box.calibrate_requested.connect(self.calibrate_requested)
             layout.addWidget(box)
             self.boxes[name] = box
         layout.addStretch(1)
@@ -316,3 +346,14 @@ class ModulePanel(QScrollArea):
 
     def set_awb_gains(self, gains: tuple[float, float, float, float]) -> None:
         self.boxes["awb"].set_awb_gains(gains)
+
+    def set_stats(self, stats: dict[str, object], *, preview_factor: int = 1) -> None:
+        """Show the measurements a run reported (currently the DPC pixel count)."""
+        corrected = stats.get("dpc_corrected")
+        total = stats.get("dpc_total")
+        if isinstance(corrected, int) and isinstance(total, int) and total:
+            percent = 100 * corrected / total
+            scale = "" if preview_factor == 1 else f" · preview 1:{preview_factor}"
+            self.boxes["dpc"].set_report(f"Corrected {corrected:,} pixels ({percent:.3f} %){scale}")
+        else:
+            self.boxes["dpc"].set_report("–")

@@ -1,0 +1,79 @@
+hardware:
+  width: 1080
+  height: 1082
+  bit_depth: 10
+  bayer_pattern: bggr
+modules:
+  dpc:
+    enabled: false
+    diff_threshold: 30
+  blc:
+    enabled: true
+    bl_r: 32
+    bl_gr: 32
+    bl_gb: 32
+    bl_b: 32
+    alpha: 0.0
+    beta: 0.0
+  aaf:
+    enabled: false
+  awb:
+    enabled: true
+    mode: manual
+    r_gain: 1.2684999704360962
+    gr_gain: 1.0
+    gb_gain: 1.0
+    b_gain: 1.6741000413894653
+  cnf:
+    enabled: false
+    diff_threshold: 0
+  cfa:
+    enabled: true
+    mode: bilinear
+  ccm:
+    enabled: true
+    ccm:
+    - [1.7136, -0.5183, -0.3045, 0.0]
+    - [-0.3845, 1.9109, -0.5073, 0.0]
+    - [-0.0468, -1.1514, 1.9944, 0.0]
+  gac:
+    enabled: true
+    gain: 1.0
+    gamma: 0.42
+  csc:
+    enabled: true
+  nlm:
+    enabled: false
+    search_window_size: 9
+    patch_size: 3
+    h: 10.0
+  bnf:
+    enabled: false
+    intensity_sigma: 0.8
+    spatial_sigma: 0.8
+  ceh:
+    enabled: false
+    tiles: [4, 6]
+    clip_limit: 0.01
+  eeh:
+    enabled: false
+    edge_gain: 1.5
+    flat_threshold: 4
+    edge_threshold: 8
+    delta_threshold: 64
+  fcs:
+    enabled: false
+    delta_min: 8
+    delta_max: 32
+  hsc:
+    enabled: false
+    hue_offset: 0.0
+    saturation_gain: 1.5
+  bcc:
+    enabled: false
+    brightness_offset: 0
+    contrast_gain: 1.13
+  scl:
+    enabled: false
+    width: 1090
+    height: 1096

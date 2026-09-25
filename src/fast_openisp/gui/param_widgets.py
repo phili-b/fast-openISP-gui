@@ -184,9 +184,11 @@ class MatrixEditor(ParamEditor):
             cells = []
             for col in range(4):
                 spin = QDoubleSpinBox()
-                spin.setDecimals(4)
-                spin.setRange(-8.0, 8.0)
-                spin.setSingleStep(0.01)
+                offset_column = col == 3
+                # Offsets are in HDR code values, so they need a much wider range than the gains
+                spin.setDecimals(2 if offset_column else 4)
+                spin.setRange(*((-4096.0, 4096.0) if offset_column else (-8.0, 8.0)))
+                spin.setSingleStep(1.0 if offset_column else 0.01)
                 spin.setKeyboardTracking(False)
                 spin.setButtonSymbols(QDoubleSpinBox.ButtonSymbols.NoButtons)
                 spin.setMinimumWidth(56)

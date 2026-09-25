@@ -60,6 +60,9 @@ def cmd_run(args: argparse.Namespace) -> int:
     if not args.quiet:
         timings = ", ".join(f"{k}={v * 1000:.0f}ms" for k, v in result.timings.items())
         print(f"Wrote {output} ({result.elapsed:.2f}s: {timings})")
+        corrected = result.stats.get("dpc_corrected")
+        if isinstance(corrected, int):
+            print(f"DPC corrected {corrected} pixels")
     return 0
 
 

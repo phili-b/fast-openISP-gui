@@ -1,5 +1,33 @@
 # Release notes
 
+## v0.3.0 - color checker calibration
+
+**Fit the color correction matrix on a ColorChecker.** The CCM module has a new
+**Calibrate on color checker...** button (also **Config -> Calibrate CCM on color checker...**)
+that measures the matrix from a photograph of an X-Rite / Calibrite ColorChecker Classic.
+See [Color calibration](calibration.md).
+
+- The chart is located automatically with OpenCV's `mcc` detector; its outline and the 24
+  sampling squares are drawn over the image and every corner can be dragged. **Rotate 90°**
+  fixes a chart that is not in landscape orientation.
+- **Patch scale** (20-90 %) sets how much of each cell is averaged.
+- The fit can be weighted: *All patches*, *Neutrals (grey ramp)*, *Neutrals only*, *Skin tones*,
+  or any per-patch weight typed into the table.
+- **Illuminant adaptation**: the chart's D50 reference data is adapted to the chosen target
+  white point (D65, D50, D55, A, TL84 or E) with Bradford, CAT02, von Kries or no transform.
+- The **CIEDE2000 error is reported before and after** the fit, per patch and as a summary
+  (mean, maximum and the mean over the grey ramp). Clipped patches are detected and excluded.
+- 3x3 or 3x4 (with offsets) matrices, a ΔE2000 or ΔE76 objective, and an optional
+  *Preserve neutral* normalisation that forces the row sums to 1.
+- Calibration always runs on the full-resolution image, using exactly the data the CCM module
+  receives (linear, white balanced, demosaiced).
+
+**DPC reports its work.** Expanding the Dead Pixel Correction module now shows how many pixels
+the last run corrected, with the percentage and the preview scale. The command line prints the
+same count.
+
+Requires OpenCV 5.0 or newer (the `mcc` and `ccm` modules); `uv sync` updates it.
+
 ## v0.2.0 — first GUI release
 
 The first release of **fast-openISP GUI**: a Windows desktop application and Python package
