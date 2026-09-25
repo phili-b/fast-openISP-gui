@@ -11,8 +11,10 @@ itself a NumPy reimplementation of [openISP](https://github.com/cruxopen/openISP
 Author of the GUI/packaging work: Philippe Baetens. Docs:
 <https://fiepfiep.github.io/fast-openISP-gui/>.
 
-Remotes: `mygithub` (github.com/fiepfiep/fast-openISP-gui), `gitlab` (ams-OSRAM internal),
-`origin` (upstream QiuJueqin/fast-openISP — do not push there). Branch: `master`.
+Remotes: `origin` and `mygithub` both point at github.com/phili-b/fast-openISP-gui (the
+repository was renamed from fiepfiep), `gitlab` is the ams-OSRAM internal mirror, and
+`upstream` is QiuJueqin/fast-openISP — **never push or open pull requests there**.
+Branch: `master`; work is committed straight to it and pushed to `mygithub` and `gitlab`.
 
 ## Commands
 
