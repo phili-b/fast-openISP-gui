@@ -10,13 +10,12 @@ import numpy as np
 import pytest
 
 from fast_openisp.config import IspConfig, bundled_configs
-from fast_openisp.io.loaders import load_raw, load_tiff
+from fast_openisp.io.loaders import load_raw
 from fast_openisp.pipeline import Pipeline
 
 ROOT = Path(__file__).resolve().parents[1]
 GOLDEN = ROOT / "tests" / "golden"
 TEST_RAW = ROOT / "raw" / "test.RAW"
-MIKROS = ROOT / "raw" / "mikros110.tiff"
 
 
 def _golden(name: str) -> np.ndarray:
@@ -94,18 +93,3 @@ def test_rgb_scaled(test_config: IspConfig, test_bayer: np.ndarray) -> None:
     )
     result = Pipeline(config).execute(test_bayer)
     np.testing.assert_array_equal(result.image, _golden("test_rgb_scaled"))
-
-
-def test_mikros110_manual_wb(test_config: IspConfig) -> None:
-    # The golden image used the `test` parameters with the mikros110 sensor settings. Build that
-    # here rather than using the bundled mikros110 config, which is meant to be tuned freely.
-    config = test_config.with_hardware(width=1090, height=1096, bit_depth=10, bayer_pattern="bggr")
-    config = _update(
-        config,
-        blc={"bl_r": 32, "bl_gr": 32, "bl_gb": 32, "bl_b": 32},
-        awb={"mode": "manual", "r_gain": 1.5, "b_gain": 1.75},
-    )
-    raw = load_tiff(MIKROS, bayer_pattern="bggr")
-    assert raw.bit_depth == 10
-    result = Pipeline(config).execute(raw.bayer)
-    np.testing.assert_array_equal(result.image, _golden("mikros110_manual"))

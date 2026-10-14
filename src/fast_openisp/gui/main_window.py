@@ -79,7 +79,7 @@ from fast_openisp.pipeline import Pipeline, PipelineError
 CONFIG_EXTENSIONS = (".yaml", ".yml")
 DEBOUNCE_MS = 250
 MAX_RECENT = 8
-DEFAULT_CONFIG = "mikros110"
+DEFAULT_CONFIG = "connan_raw14"
 PROJECT_URL = "https://phili-b.github.io/fast-openISP-gui/"
 
 

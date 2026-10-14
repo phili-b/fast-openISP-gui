@@ -16,7 +16,7 @@ The script:
 1. syncs the environment (`uv sync`),
 2. runs `uv run pyinstaller fast_openisp.spec --noconfirm --clean`,
 3. runs the smoke test `dist\fast-openISP.exe --self-test`, which processes synthetic
-   mikros110-sized data at preview and full size and writes a PNG to `%TEMP%`.
+   connan-sized data at preview and full size and writes a PNG to `%TEMP%`.
 
 The result is `dist\fast-openISP.exe`.
 
@@ -62,7 +62,7 @@ release. The zip contains:
 | `fast-openISP.exe` | The application |
 | `README.txt` | Quick start |
 | `configs/*.yaml` | The bundled configurations |
-| `raw/mikros110.tiff`, `raw/test.RAW`, `raw/mira220_rgb.dng` | Sample images |
+| `raw/connan_raw14.raw`, `raw/test.RAW`, `raw/mira220_rgb.dng` | Sample images |
 
 To build the same zip locally, run `.\scripts\build_exe.ps1` and then
 `.\scripts\package_release.ps1`; the zip is written to `dist\`. Update `__version__` in

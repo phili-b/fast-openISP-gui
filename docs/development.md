@@ -73,7 +73,7 @@ To turn on GitHub Pages (one-time setup):
   output. The reference images in `tests/golden/` were generated with the original
   fast-openISP code before the refactor, covering: the default `test` config, a variant
   that changes almost every parameter (including bilinear demosaicing), an RGB-only
-  pipeline with scaling, and `mikros110.tiff` with manual white balance.
+  pipeline with scaling.
 - `tests/gui/` drives the main window offscreen (`QT_QPA_PLATFORM=offscreen`) with
   pytest-qt: opening and dropping files, module dependencies, parameter edits, grey-world
   freeze, view modes, export, and error handling.

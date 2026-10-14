@@ -5,13 +5,13 @@ Minimal example:
 ```python
 from fast_openisp.config import bundled_configs
 from fast_openisp.io.export import save_image
-from fast_openisp.io.loaders import load_tiff
+from fast_openisp.io.loaders import load_raw
 from fast_openisp.pipeline import Pipeline
 
-config = bundled_configs()["mikros110"]
-raw = load_tiff("raw/mikros110.tiff", bayer_pattern="bggr")
+config = bundled_configs()["connan_raw14"]
+raw = load_raw("raw/connan_raw14.raw", 6080, 4044, 14, "bggr")
 result = Pipeline(config).execute(raw.bayer)
-save_image(result.image, "mikros110.png")
+save_image(result.image, "connan_raw14.png")
 print(result.awb_gains, result.timings)
 ```
 

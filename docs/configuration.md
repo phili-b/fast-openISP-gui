@@ -90,7 +90,7 @@ With the VS Code YAML extension, add this as the first line of the config:
 
 | Name | Sensor | Notes |
 |---|---|---|
-| `mikros110` | 1090 × 1096, 10-bit BGGR | Black level 32, identity CCM, grey-world AWB |
+| `connan_raw14` | 6080 × 4044, 14-bit BGGR | Black level 32, manual white balance |
 | `test` | 1920 × 1080, 10-bit RGGB | For `raw/test.RAW` |
 | `nikon_d3x` | 6080 × 4044, 14-bit RGGB | Nikon D3x |
 | `nikon_d3200` | 3000 × 2000, 12-bit RGGB | Nikon D3200 |

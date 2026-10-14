@@ -66,7 +66,7 @@ fast_openisp.spec   PyInstaller (one-file, windowed, splash)
 - **Module dependencies** live in `MODULE_INFO[...].requires`; the GUI resolves them with
   `resolve_enabled()`. Never hard-code them in the GUI.
 - **Bundled configs are user-tunable.** Tests must not depend on their parameter values
-  (`mikros110` in particular); build the config explicitly in the test instead.
+  (`connan_raw14` in particular); build the config explicitly in the test instead.
 - **Image size comes from the data**, not from `hardware.width/height` (those are only for
   headerless `.raw`), so one config works for preview and full resolution.
 - **GUI threading**: previews run on a single-thread `QThreadPool`; a newer request cancels
@@ -107,7 +107,7 @@ with those notes and a SHA-256. `ci.yml` runs lint/type/tests/docs/exe on pushes
 
 | File | Format |
 |---|---|
-| `raw/mikros110.tiff` | 1090 × 1096, 10-bit in 16-bit TIFF, BGGR, black level 32 |
+| `raw/connan_raw14.raw` | 6080 × 4044, 14-bit headerless, BGGR, black level 32 (default) |
 | `raw/test.RAW` | 1920 × 1080, 10-bit headerless, RGGB |
 | `raw/mira220_rgb.dng` | 1600 × 1400, 12-bit DNG, GRBG, black level 156 |
 | `raw/color_checker.pgm` | PGM — **not a supported input** |

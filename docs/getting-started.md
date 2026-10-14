@@ -17,7 +17,7 @@
 You can also open a file directly by dragging it onto the exe icon, or from a terminal:
 
 ```bash
-fast-openISP.exe raw\mikros110.tiff
+fast-openISP.exe raw\connan_raw14.raw
 ```
 
 ## Option 2: run from source with uv
@@ -46,15 +46,14 @@ uv run fast-openisp-gui
 Or process a file from the command line:
 
 ```bash
-uv run fast-openisp run raw/mikros110.tiff -c mikros110 -o mikros110.png
+uv run fast-openisp run raw/connan_raw14.raw -c connan_raw14 -o connan_raw14.png
 ```
 
 ## Your first image
 
-1. Start the GUI. The `mikros110` configuration is active by default.
-2. Drag `raw/mikros110.tiff` onto the window.
-3. The import dialog shows **1090 × 1096**, **10 bit** (worked out from the pixel values)
-   and **BGGR**. Click **OK**.
+1. Start the GUI. The `connan_raw14` configuration is active by default.
+2. Drag `raw/connan_raw14.raw` onto the window.
+3. The import dialog shows **6080 × 4044**, **14 bit** and **BGGR**. Click **OK**.
 4. The processed preview appears after a moment. White balance uses the grey-world estimate.
 5. Press **F4** for the split view and drag the divider to compare with the unprocessed
    input.

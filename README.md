@@ -59,7 +59,7 @@ run `fast-openISP.exe`. The zip includes sample configs and raw images:
 
 | Sample | Format | Config |
 |---|---|---|
-| `raw/mikros110.tiff` | 1090 × 1096, 10-bit BGGR TIFF | `mikros110` (default) |
+| `raw/connan_raw14.raw` | 6080 × 4044, 14-bit BGGR headerless raw | `connan_raw14` (default) |
 | `raw/test.RAW` | 1920 × 1080, 10-bit RGGB headerless raw | `test` |
 | `raw/mira220_rgb.dng` | 1600 × 1400, 12-bit GRBG DNG | `mira220_rgb` |
 
@@ -83,7 +83,7 @@ uv run fast-openisp-gui
 Command line:
 
 ```bash
-uv run fast-openisp run raw/mikros110.tiff -c mikros110 -o mikros110.png
+uv run fast-openisp run raw/connan_raw14.raw -c connan_raw14 -o connan_raw14.png
 uv run fast-openisp configs     # list bundled configs
 uv run fast-openisp schema      # JSON Schema for editor autocompletion
 ```
@@ -92,11 +92,11 @@ Python:
 
 ```python
 from fast_openisp.config import bundled_configs
-from fast_openisp.io.loaders import load_tiff
+from fast_openisp.io.loaders import load_raw
 from fast_openisp.pipeline import Pipeline
 
-config = bundled_configs()["mikros110"]
-raw = load_tiff("raw/mikros110.tiff", bayer_pattern="bggr")
+config = bundled_configs()["connan_raw14"]
+raw = load_raw("raw/connan_raw14.raw", 6080, 4044, 14, "bggr")
 result = Pipeline(config).execute(raw.bayer)
 result.image  # (H, W, 3) uint8 RGB
 result.awb_gains  # white-balance gains that were applied

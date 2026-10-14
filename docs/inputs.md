@@ -17,8 +17,8 @@ Example: `raw/test.RAW` is 1920 × 1080, 10-bit, RGGB (the bundled `test` config
 A single-page, single-channel, integer TIFF holding the Bayer mosaic.
 
 - **Bit depth** is worked out from the pixel values, not from the TIFF header. Sensors often
-  store 10- or 12-bit data in a 16-bit TIFF. For example, `raw/mikros110.tiff` says 16 bits
-  per sample but its values only go up to 1023, so it is treated as 10-bit.
+  store 10- or 12-bit data in a 16-bit TIFF. A TIFF may say 16 bits
+  per sample while its values only go up to 1023, so it is treated as 10-bit.
 - **High-bit data**: if every value is a multiple of 4 or more (the data sits in the high
   bits), it is shifted down automatically.
 - The **Bayer pattern** is not stored in a plain TIFF; it comes from the active
@@ -40,12 +40,12 @@ are taken from the file:
 
 DNGs that are already demosaiced, and X-Trans or other non-Bayer sensors, are not supported.
 
-## Reference image: `mikros110.tiff`
+## Reference image: `connan_raw14.raw`
 
 | Property | Value |
 |---|---|
-| Size | 1090 × 1096 |
-| Data | 10-bit in a 16-bit container |
+| Size | 6080 × 4044 |
+| Data | 14-bit in a 16-bit container, headerless |
 | Bayer pattern | BGGR |
 | Black level | 32 DN |
-| Configuration | `mikros110` (identity CCM, grey-world AWB) |
+| Configuration | `connan_raw14` (manual white balance) |

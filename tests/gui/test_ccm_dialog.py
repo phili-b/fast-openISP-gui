@@ -123,13 +123,14 @@ def test_weight_edit_switches_to_custom(dialog: CcmCalibrationDialog) -> None:
 
 
 def test_main_window_applies_the_calibration(
-    qtbot: QtBot, window: MainWindow, mikros_path: Path, monkeypatch: pytest.MonkeyPatch
+    qtbot: QtBot, window: MainWindow, connan_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     with qtbot.waitSignal(window.runner.preview_ready, timeout=TIMEOUT):
-        assert window.open_path(mikros_path)
-    assert window.config.modules.ccm.ccm == IDENTITY_CCM
-
+        assert window.open_path(connan_path)
     fitted = ((1.4, -0.3, -0.1, 0.0), (-0.2, 1.4, -0.2, 0.0), (0.0, -0.4, 1.4, 0.0))
+    initial = window.config.modules.ccm.ccm
+    assert initial != fitted
+
     captured: dict[str, object] = {}
 
     def fake_dialog(linear_rgb, saturation, current):
@@ -149,9 +150,9 @@ def test_main_window_applies_the_calibration(
         window._calibrate_module("ccm")
 
     assert window.config.modules.ccm.ccm == fitted
-    assert captured["current"] == IDENTITY_CCM
+    assert captured["current"] == initial
     # Calibration runs on the full-resolution image, not on the preview
-    assert captured["shape"] == (1096, 1090, 3)
+    assert captured["shape"] == (4044, 6080, 3)
     assert window.dirty
     report = window.panel.boxes["ccm"].report_label
     assert report is not None
@@ -159,10 +160,10 @@ def test_main_window_applies_the_calibration(
 
 
 def test_cancelling_the_dialog_keeps_the_matrix(
-    qtbot: QtBot, window: MainWindow, mikros_path: Path, monkeypatch: pytest.MonkeyPatch
+    qtbot: QtBot, window: MainWindow, connan_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     with qtbot.waitSignal(window.runner.preview_ready, timeout=TIMEOUT):
-        assert window.open_path(mikros_path)
+        assert window.open_path(connan_path)
     monkeypatch.setattr(window, "ask_ccm_calibration", lambda *args: None)
     window._calibrate_module("ccm")
     assert window.config.modules.ccm.ccm == IDENTITY_CCM
@@ -173,18 +174,18 @@ def test_calibration_without_an_image_warns(window: MainWindow) -> None:
     assert "color checker" in window.banner.label.text()
 
 
-def test_dpc_count_is_reported(qtbot: QtBot, window: MainWindow, mikros_path: Path) -> None:
+def test_dpc_count_is_reported(qtbot: QtBot, window: MainWindow, connan_path: Path) -> None:
     with qtbot.waitSignal(window.runner.preview_ready, timeout=TIMEOUT):
-        assert window.open_path(mikros_path)
+        assert window.open_path(connan_path)
     report = window.panel.boxes["dpc"].report_label
     assert report is not None
 
-    # The bundled mikros110 config may have DPC switched off; a disabled module reports nothing
+    # The bundled config may have DPC switched off; a disabled module reports nothing
     with qtbot.waitSignal(window.runner.preview_ready, timeout=TIMEOUT):
         window.panel.boxes["dpc"].enable_box.setChecked(True)
         window.schedule_preview(immediate=True)
     assert "Corrected" in report.text()
-    assert "preview 1:2" in report.text()
+    assert "preview 1:6" in report.text()
 
     with qtbot.waitSignal(window.runner.preview_ready, timeout=TIMEOUT):
         window.panel.boxes["dpc"].enable_box.setChecked(False)

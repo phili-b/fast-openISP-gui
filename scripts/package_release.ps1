@@ -19,7 +19,7 @@ New-Item -ItemType Directory -Force "$stage\configs", "$stage\raw" | Out-Null
 Copy-Item $exe $stage
 Copy-Item "src\fast_openisp\configs\*.yaml" "$stage\configs"
 # Sample images in supported formats
-Copy-Item "raw\mikros110.tiff", "raw\test.RAW", "raw\mira220_rgb.dng" "$stage\raw"
+Copy-Item "raw\connan_raw14.raw", "raw\test.RAW", "raw\mira220_rgb.dng" "$stage\raw"
 
 $readme = @"
 fast-openISP $version
@@ -35,8 +35,8 @@ Source:        https://github.com/phili-b/fast-openISP-gui
 Quick start
 -----------
 1. Run fast-openISP.exe (no Python needed). The first start takes a few seconds.
-2. Drag raw\mikros110.tiff onto the window and confirm the import dialog
-   (1090 x 1096, 10 bit, BGGR). The bundled 'mikros110' config is active by default.
+2. Drag raw\connan_raw14.raw onto the window and confirm the import dialog
+   (6080 x 4044, 14 bit, BGGR). The bundled 'connan_raw14' config is active by default.
 3. For raw\test.RAW, first choose Config > Bundled configs > test
    (1920 x 1080, 10 bit, RGGB).
 4. Drop raw\mira220_rgb.dng: size, pattern, black level and white balance
@@ -48,7 +48,7 @@ Contents
 --------
 fast-openISP.exe   the application
 configs\           YAML configurations (also built into the exe; load via Config > Load YAML)
-raw\               sample images: mikros110.tiff (10-bit BGGR), test.RAW (10-bit RGGB),
+raw\               sample images: connan_raw14.raw (14-bit BGGR), test.RAW (10-bit RGGB),
                    mira220_rgb.dng (12-bit GRBG DNG)
 
 Windows SmartScreen may warn because the exe is not code-signed:

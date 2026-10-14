@@ -6,7 +6,7 @@ starts quickly and works on headless machines.
 ## Process an image
 
 ```bash
-uv run fast-openisp run raw/mikros110.tiff -c mikros110 -o mikros110.png
+uv run fast-openisp run raw/connan_raw14.raw -c connan_raw14 -o connan_raw14.png
 ```
 
 | Option | Meaning |
@@ -24,7 +24,7 @@ uv run fast-openisp run raw/mikros110.tiff -c mikros110 -o mikros110.png
 It prints the time spent in each module:
 
 ```text
-Wrote mikros110.png (4.14s: dpc=160ms, blc=15ms, ..., nlm=2937ms, ...)
+Wrote connan_raw14.png (4.14s: dpc=160ms, blc=15ms, ..., nlm=2937ms, ...)
 ```
 
 ## Other commands

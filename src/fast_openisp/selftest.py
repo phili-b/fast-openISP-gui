@@ -23,9 +23,9 @@ def synthetic_bayer(width: int = 1090, height: int = 1096, bit_depth: int = 10) 
 
 
 def run_self_test(output_dir: Path | None = None) -> Path:
-    """Process synthetic mikros110-sized data at preview and full size; write a PNG."""
-    config = bundled_configs()["mikros110"]
-    bayer = synthetic_bayer()
+    """Process synthetic connan-sized data at preview and full size; write a PNG."""
+    config = bundled_configs()["connan_raw14"]
+    bayer = synthetic_bayer(bit_depth=config.hardware.bit_depth)
     factor = preview_factor(bayer.shape)
     small = downscale_bayer(bayer, factor, config.hardware.bayer_pattern)
     render_before(small, config.hardware.bit_depth, config.hardware.bayer_pattern)

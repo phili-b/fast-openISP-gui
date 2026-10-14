@@ -102,7 +102,7 @@ G_b' &= G_b - bl_{gb} + \beta B'
 $$
 
 The black level can be measured by capturing a frame with the lens covered and averaging
-each channel. For `mikros110` it is 32 DN.
+each channel. For `connan_raw14` it is 32 DN.
 
 ### LSC — Lens Shading Correction (openISP only)
 
@@ -249,7 +249,7 @@ If each row sums to 1, neutral greys stay neutral. Off-diagonal entries are usua
 they subtract the crosstalk between channels and increase saturation. A CCM is normally
 fitted by least squares on a color checker photographed after white balance, which the GUI can
 do for you - see [Color calibration](calibration.md). For an uncalibrated sensor, such as
-`mikros110`, start from the identity matrix.
+`connan_raw14`, start from the identity matrix.
 
 openISP also mentions **3D lookup tables** (for example 33 × 33 × 33 with trilinear
 interpolation) as a more flexible alternative. They are not implemented here.
@@ -324,7 +324,7 @@ Y'(p) = \frac{\sum_q w(p,q)\,Y(p+q)}{\sum_q w(p,q)}
 $$
 
 A larger $h$ smooths more. Cost grows with $W^2$: it is the slowest module (≈ 3 s for
-mikros110 at full size).
+connan_raw14 at full size).
 
 ### BNF — Bilateral Noise Filter (luma)
 

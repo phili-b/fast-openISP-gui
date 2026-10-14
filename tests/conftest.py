@@ -21,8 +21,8 @@ CHART_MATRIX = np.array(
 
 
 @pytest.fixture
-def mikros_path() -> Path:
-    return ROOT / "raw" / "mikros110.tiff"
+def connan_path() -> Path:
+    return ROOT / "raw" / "connan_raw14.raw"
 
 
 @pytest.fixture

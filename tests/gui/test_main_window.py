@@ -25,8 +25,16 @@ TIMEOUT = 120_000
 def window(qtbot: QtBot, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[MainWindow]:
     settings = QSettings(str(tmp_path / "settings.ini"), QSettings.Format.IniFormat)
     win = MainWindow(settings)
+    # The bundled config is meant to be tuned freely; pin the parameters these tests rely on.
+    data = win.config.model_dump()
+    data["modules"]["awb"].update(enabled=True, mode="grey_world")
+    for name in ("csc", "nlm", "bnf", "eeh", "fcs", "hsc", "bcc"):
+        data["modules"][name]["enabled"] = True
+    win._set_base_config(type(win.config).model_validate(data), "connan_raw14", None)
     # Accept the import dialog defaults without showing it
     monkeypatch.setattr(win, "ask_import_settings", lambda path, defaults, headerless: defaults)
+    # An edited config would otherwise raise a modal "discard changes?" box when the test ends
+    monkeypatch.setattr(win, "_confirm_discard", lambda: True)
     qtbot.addWidget(win)
     win.show()
     yield win
@@ -45,22 +53,22 @@ def _screenshot(win: MainWindow, name: str) -> None:
         win.grab().save(str(Path(SCREENSHOTS) / f"{name}.png"))
 
 
-def test_open_tiff_shows_preview(qtbot: QtBot, window: MainWindow, mikros_path: Path) -> None:
-    _open(qtbot, window, mikros_path)
+def test_open_raw_shows_preview(qtbot: QtBot, window: MainWindow, connan_path: Path) -> None:
+    _open(qtbot, window, connan_path)
     assert window.raw is not None
-    assert window.raw.bit_depth == 10
+    assert window.raw.bit_depth == 14
     assert window.config.hardware.bayer_pattern == "bggr"
-    assert window.factor == 2
+    assert window.factor == 6
     assert window.last_image is not None
-    assert window.last_image.shape == (548, 544, 3)
-    assert "mikros110.tiff" in window.info_label.text()
+    assert window.last_image.shape == (674, 1012, 3)
+    assert "connan_raw14.raw" in window.info_label.text()
     window.view.fit()
     _screenshot(window, "01_processed")
 
 
-def test_drop_file_opens_it(qtbot: QtBot, window: MainWindow, mikros_path: Path) -> None:
+def test_drop_file_opens_it(qtbot: QtBot, window: MainWindow, connan_path: Path) -> None:
     mime = QMimeData()
-    mime.setUrls([QUrl.fromLocalFile(str(mikros_path))])
+    mime.setUrls([QUrl.fromLocalFile(str(connan_path))])
     event = QDropEvent(
         QPointF(10, 10),
         Qt.DropAction.CopyAction,
@@ -71,13 +79,13 @@ def test_drop_file_opens_it(qtbot: QtBot, window: MainWindow, mikros_path: Path)
     with qtbot.waitSignal(window.runner.preview_ready, timeout=TIMEOUT):
         window.dropEvent(event)
     assert window.raw is not None
-    assert window.raw.source_path == mikros_path
+    assert window.raw.source_path == connan_path
 
 
 def test_disabling_csc_disables_dependents(
-    qtbot: QtBot, window: MainWindow, mikros_path: Path
+    qtbot: QtBot, window: MainWindow, connan_path: Path
 ) -> None:
-    _open(qtbot, window, mikros_path)
+    _open(qtbot, window, connan_path)
     with qtbot.waitSignal(window.runner.preview_ready, timeout=TIMEOUT):
         window.panel.boxes["csc"].enable_box.setChecked(False)
     dependents = ("nlm", "bnf", "eeh", "fcs", "hsc", "bcc")
@@ -97,8 +105,8 @@ def test_disabling_csc_disables_dependents(
         assert window.panel.boxes[name].enable_box.isEnabled()
 
 
-def test_parameter_edit_reruns(qtbot: QtBot, window: MainWindow, mikros_path: Path) -> None:
-    _open(qtbot, window, mikros_path)
+def test_parameter_edit_reruns(qtbot: QtBot, window: MainWindow, connan_path: Path) -> None:
+    _open(qtbot, window, connan_path)
     assert window.last_image is not None
     before = window.last_image.copy()
     box = window.panel.boxes["gac"]
@@ -108,11 +116,11 @@ def test_parameter_edit_reruns(qtbot: QtBot, window: MainWindow, mikros_path: Pa
     assert window.config.modules.gac.gamma == pytest.approx(0.8)
     assert window.dirty
     assert (window.last_image != before).any()
-    assert window.windowTitle().startswith("mikros110*")
+    assert window.windowTitle().startswith("connan_raw14*")
 
 
-def test_grey_world_freeze(qtbot: QtBot, window: MainWindow, mikros_path: Path) -> None:
-    _open(qtbot, window, mikros_path)
+def test_grey_world_freeze(qtbot: QtBot, window: MainWindow, connan_path: Path) -> None:
+    _open(qtbot, window, connan_path)
     box = window.panel.boxes["awb"]
     box.set_expanded(True)
     assert window.config.modules.awb.mode == "grey_world"
@@ -126,8 +134,8 @@ def test_grey_world_freeze(qtbot: QtBot, window: MainWindow, mikros_path: Path) 
     _screenshot(window, "03_awb_frozen")
 
 
-def test_split_view_and_modes(qtbot: QtBot, window: MainWindow, mikros_path: Path) -> None:
-    _open(qtbot, window, mikros_path)
+def test_split_view_and_modes(qtbot: QtBot, window: MainWindow, connan_path: Path) -> None:
+    _open(qtbot, window, connan_path)
     window.set_mode(ViewMode.SPLIT)
     assert window.view.item.mode == ViewMode.SPLIT
     window.view.item.split = 0.4
@@ -140,9 +148,9 @@ def test_split_view_and_modes(qtbot: QtBot, window: MainWindow, mikros_path: Pat
 
 
 def test_export_png_and_jpg(
-    qtbot: QtBot, window: MainWindow, mikros_path: Path, tmp_path: Path
+    qtbot: QtBot, window: MainWindow, connan_path: Path, tmp_path: Path
 ) -> None:
-    _open(qtbot, window, mikros_path)
+    _open(qtbot, window, connan_path)
     for name, save_cfg in (("out.png", True), ("out.jpg", False)):
         target = tmp_path / name
         with qtbot.waitSignal(window.runner.export_ready, timeout=TIMEOUT):
@@ -150,7 +158,7 @@ def test_export_png_and_jpg(
         qtbot.waitUntil(target.exists, timeout=5000)
         image = cv2.imread(str(target))
         assert image is not None
-        assert image.shape == (1096, 1090, 3)
+        assert image.shape == (4044, 6080, 3)
     assert (tmp_path / "out.yaml").exists()
 
 
