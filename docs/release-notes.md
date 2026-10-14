@@ -1,5 +1,13 @@
 # Release notes
 
+## v0.4.1 - mira220_rgb config fixes
+
+- `mira220_rgb` config: corrected bit depth (11-bit, not 12), black level, a fitted CCM
+  (previously identity), and gain/gamma/contrast tuned for the sensor. **Hue/Saturation**
+  and the **scaler** are now disabled by default for this config.
+- The separate `mira220_calibrated` config is removed; its calibration is merged into
+  `mira220_rgb`.
+
 ## v0.4.0 - gamma and gain, reference swatches
 
 **Gamma and Gain.** The gamma module is now *Gamma and Gain*: a **transfer curve** choice
