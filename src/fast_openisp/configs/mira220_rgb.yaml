@@ -1,7 +1,7 @@
 hardware:
   width: 1600
   height: 1400
-  bit_depth: 12
+  bit_depth: 11
   bayer_pattern: grbg
 modules:
   dpc:
@@ -9,10 +9,10 @@ modules:
     diff_threshold: 30
   blc:
     enabled: true
-    bl_r: 156
-    bl_gr: 156
-    bl_gb: 156
-    bl_b: 156
+    bl_r: 200
+    bl_gr: 200
+    bl_gb: 200
+    bl_b: 200
     alpha: 0.0
     beta: 0.0
   aaf:
@@ -33,13 +33,16 @@ modules:
   ccm:
     enabled: true
     ccm:
-    - [1.0, 0.0, 0.0, 0.0]
-    - [0.0, 1.0, 0.0, 0.0]
-    - [0.0, 0.0, 1.0, 0.0]
+    - [1.4051, -0.4693, -0.2268, 0.0]
+    - [-0.2649, 1.0119, -0.144, 0.0]
+    - [-0.0711, -0.0834, 0.5594, 0.0]
   gac:
     enabled: true
-    gain: 1.0
-    gamma: 0.42
+    auto_gain: false
+    auto_gain_clip: 1.0
+    gain: 1.81
+    curve: srgb
+    gamma: 0.4545
   csc:
     enabled: true
   nlm:
@@ -66,14 +69,14 @@ modules:
     delta_min: 8
     delta_max: 32
   hsc:
-    enabled: true
+    enabled: false
     hue_offset: 0.0
-    saturation_gain: 1.5
+    saturation_gain: 1.1
   bcc:
     enabled: true
     brightness_offset: 0
-    contrast_gain: 1.13
+    contrast_gain: 1.17
   scl:
-    enabled: true
+    enabled: false
     width: 1090
     height: 1096
