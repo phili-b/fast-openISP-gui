@@ -14,6 +14,7 @@ from PySide6.QtGui import (
     QPaintEvent,
     QPen,
     QPixmap,
+    QPolygonF,
     QWheelEvent,
 )
 from PySide6.QtWidgets import (
@@ -52,6 +53,7 @@ class CompareItem(QGraphicsItem):
         self.before: QPixmap | None = None
         self.mode = ViewMode.PROCESSED
         self.split = 0.5
+        self.overlay: list[tuple[QPolygonF, QColor]] = []
 
     def boundingRect(self) -> QRectF:
         return self.rect
@@ -86,6 +88,13 @@ class CompareItem(QGraphicsItem):
             pen.setWidth(2)
             painter.setPen(pen)
             painter.drawLine(QPointF(split_x, 0), QPointF(split_x, rect.height()))
+        if self.overlay:
+            outline = QPen(QColor(0, 0, 0, 200))
+            outline.setCosmetic(True)
+            painter.setPen(outline)
+            for polygon, colour in self.overlay:
+                painter.setBrush(colour)
+                painter.drawPolygon(polygon)
 
     @staticmethod
     def _draw(painter: QPainter, pixmap: QPixmap | None, rect: QRectF) -> None:
@@ -127,6 +136,15 @@ class CompareView(QGraphicsView):
 
     def set_processed(self, image: QImage | None) -> None:
         self.item.processed = QPixmap.fromImage(image) if image is not None else None
+        self.item.update()
+        self.viewport().update()
+
+    def set_chart_overlay(self, patches: list[tuple[np.ndarray, tuple[int, int, int]]]) -> None:
+        """Draw small filled polygons (full-resolution pixels, colour) over the image."""
+        self.item.overlay = [
+            (QPolygonF([QPointF(float(x), float(y)) for x, y in polygon]), QColor(*colour))
+            for polygon, colour in patches
+        ]
         self.item.update()
         self.viewport().update()
 

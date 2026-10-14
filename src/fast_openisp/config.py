@@ -58,7 +58,7 @@ MODULE_INFO: dict[str, ModuleInfo] = {
         ModuleInfo("cnf", "Chroma Noise Filter"),
         ModuleInfo("cfa", "Demosaicing (CFA interpolation)"),
         ModuleInfo("ccm", "Color Correction Matrix", ("cfa",)),
-        ModuleInfo("gac", "Gamma Correction", ("cfa",)),
+        ModuleInfo("gac", "Gamma and Gain", ("cfa",)),
         ModuleInfo("csc", "Color Space Conversion", ("gac",)),
         ModuleInfo("nlm", "Non-Local Means Denoising", ("csc",)),
         ModuleInfo("bnf", "Bilateral Noise Filter", ("csc",)),
@@ -166,8 +166,23 @@ class CCMParams(ModuleParams):
 
 
 class GACParams(ModuleParams):
+    auto_gain: bool = Field(
+        True, description="Choose the gain automatically from the image (overrides gain)"
+    )
+    auto_gain_clip: float = Field(
+        1.0,
+        ge=0,
+        le=50,
+        description="Percentage of the brightest pixels allowed to clip with automatic gain",
+        json_schema_extra=_unit("%", decimals=2, step=0.1),
+    )
     gain: float = Field(1.0, ge=0, le=16, description="Linear gain applied before the gamma curve")
-    gamma: float = Field(0.42, gt=0, le=4, description="Gamma exponent (output = input^gamma)")
+    curve: Literal["power", "srgb"] = Field(
+        "power", description="Transfer curve: power law with the gamma exponent, or the sRGB curve"
+    )
+    gamma: float = Field(
+        0.42, gt=0, le=4, description="Gamma exponent (output = input^gamma); unused for sRGB"
+    )
 
 
 class CSCParams(ModuleParams):

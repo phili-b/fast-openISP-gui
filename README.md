@@ -98,9 +98,9 @@ from fast_openisp.pipeline import Pipeline
 config = bundled_configs()["mikros110"]
 raw = load_tiff("raw/mikros110.tiff", bayer_pattern="bggr")
 result = Pipeline(config).execute(raw.bayer)
-result.image        # (H, W, 3) uint8 RGB
-result.awb_gains    # white-balance gains that were applied
-result.timings      # seconds per module
+result.image  # (H, W, 3) uint8 RGB
+result.awb_gains  # white-balance gains that were applied
+result.timings  # seconds per module
 ```
 
 ## The ISP pipeline

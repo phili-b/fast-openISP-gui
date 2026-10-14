@@ -74,7 +74,7 @@ def test_variant(test_config: IspConfig, test_bayer: np.ndarray) -> None:
                 for row in [[1280, -128, -128, 0], [-256, 1536, -256, 8], [0, -512, 1536, -4]]
             ]
         },
-        gac={"gain": 300 / 256, "gamma": 0.45},
+        gac={"auto_gain": False, "gain": 300 / 256, "gamma": 0.45},
         nlm={"h": 6},
         bnf={"intensity_sigma": 0.5, "spatial_sigma": 0.5},
         eeh={"edge_gain": 2.0},

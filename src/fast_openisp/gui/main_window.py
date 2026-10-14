@@ -38,6 +38,8 @@ from PySide6.QtWidgets import (
 )
 
 from fast_openisp import __version__
+from fast_openisp.calibration import ChartQuad, detect_chart
+from fast_openisp.color import reference_targets
 from fast_openisp.config import (
     CcmRow,
     ConfigError,
@@ -288,6 +290,14 @@ class MainWindow(QMainWindow):
         hint = view_menu.addAction("Hold B to show Before temporarily")
         hint.setEnabled(False)
         view_menu.addSeparator()
+        self.chart_action = self._action(
+            view_menu, "Show reference &color checker colors", self._on_chart_toggled
+        )
+        self.chart_action.setCheckable(True)
+        self.chart_action.setToolTip(
+            "Overlay the sRGB reference colors on a detected color checker"
+        )
+        view_menu.addSeparator()
         self.full_res_action = self._action(
             view_menu, "Full-resolution preview", self._on_full_res_toggled
         )
@@ -481,6 +491,40 @@ class MainWindow(QMainWindow):
         self.config = self.config.with_module(name, params)
         self.panel.config = self.config
         self._on_config_edited(self.config)
+
+    def _on_chart_toggled(self, checked: bool) -> None:
+        """Overlay the sRGB reference patches on a detected color checker."""
+        if not checked:
+            self.view.set_chart_overlay([])
+            return
+        image = self.last_image
+        if self.raw is None or image is None:
+            self.chart_action.setChecked(False)
+            self.banner.show_message("Open an image and wait for the preview first.")
+            return
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            quad = detect_chart(np.ascontiguousarray(image))
+        finally:
+            QApplication.restoreOverrideCursor()
+        if quad is None:
+            self.chart_action.setChecked(False)
+            self.banner.show_message("No color checker detected in the image.")
+            return
+        quad = quad.scaled(self.raw.width / image.shape[1])
+        self.view.set_chart_overlay(self._chart_patches(quad))
+
+    @staticmethod
+    def _chart_patches(quad: ChartQuad) -> list[tuple[np.ndarray, tuple[int, int, int]]]:
+        """Small squares at each patch centre, filled with the reference sRGB color."""
+        linear = np.clip(reference_targets().linear_rgb, 0.0, 1.0)
+        srgb = np.where(linear <= 0.0031308, 12.92 * linear, 1.055 * linear ** (1 / 2.4) - 0.055)
+        colours = np.round(np.clip(srgb, 0.0, 1.0) * 255).astype(int)
+        polygons = quad.patch_polygons(scale=0.3)
+        return [
+            (polygon, (int(c[0]), int(c[1]), int(c[2])))
+            for polygon, c in zip(polygons, colours, strict=True)
+        ]
 
     def _calibrate_module(self, name: str) -> None:
         """Fit the CCM on a colour checker in the open image."""
@@ -697,6 +741,8 @@ class MainWindow(QMainWindow):
             self.config = self.panel.set_config(config)
             self._set_dirty(True)
         self.last_image = None
+        self.chart_action.setChecked(False)
+        self.view.set_chart_overlay([])
         self.view.set_size(raw.width, raw.height)
         self.view.set_processed(None)
         self._refresh_before()

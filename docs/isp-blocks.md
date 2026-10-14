@@ -254,7 +254,7 @@ do for you - see [Color calibration](calibration.md). For an uncalibrated sensor
 openISP also mentions **3D lookup tables** (for example 33 × 33 × 33 with trilinear
 interpolation) as a more flexible alternative. They are not implemented here.
 
-### GAC — Gamma Correction
+### GAC — Gamma and Gain
 
 **Why.** The sensor responds linearly to light, but human perception of brightness is roughly
 logarithmic, and displays expect gamma-encoded signals. Gamma compression gives more code
@@ -268,7 +268,14 @@ Y = \text{sdr}\cdot\left(\frac{\operatorname{clip}(g\,x,\ 0,\ \text{hdr})}{\text
 $$
 
 $\gamma < 1$ compresses (encoding for display); $\gamma > 1$ expands. The default 0.42 is
-close to 1/2.2 (sRGB). After GAC the data is 8 bit.
+close to 1/2.2. Setting `curve: srgb` uses the piecewise sRGB curve instead of the power
+law. After GAC the data is 8 bit.
+
+**Automatic gain** is on by default (`auto_gain: true`): the gain is chosen per image so that
+the brightest pixels reach full scale, with `auto_gain_clip` percent of the pixels (default 1 %)
+allowed to clip. The manual `gain` is used only when `auto_gain` is off. The applied gain is
+shown in the GUI. In the GUI, the **Curve** dropdown offers 1.0, 2.2, sRGB and Custom; the
+exponent is the inverse of the displayed gamma.
 
 !!! note "Differs from openISP"
     openISP lists gamma before the CCM. fast-openISP applies the CCM in linear light first

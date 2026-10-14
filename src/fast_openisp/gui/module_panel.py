@@ -26,12 +26,20 @@ from fast_openisp.config import (
     BAYER_PATTERNS,
     MODULE_INFO,
     MODULE_ORDER,
+    GACParams,
     IspConfig,
     ModuleParams,
     format_validation_error,
     resolve_enabled,
 )
 from fast_openisp.gui.param_widgets import ParamEditor, create_editor, field_label
+
+_GAC_PRESETS: dict[str, dict[str, Any]] = {
+    "1.0": {"curve": "power", "gamma": 1.0},
+    "2.2": {"curve": "power", "gamma": 0.4545},
+    "sRGB": {"curve": "srgb", "gamma": 0.4545},
+}
+"""Gamma-and-gain curve presets; the exponent is the inverse of the displayed gamma."""
 
 
 class ModuleBox(QFrame):
@@ -123,6 +131,20 @@ class ModuleBox(QFrame):
             form.addRow(calibrate)
             self.calibrate_button = calibrate
 
+        if name == "gac":
+            form.setRowVisible(self.editors["curve"], False)
+            self._gac_custom = False
+            self.gac_curve = QComboBox()
+            self.gac_curve.setObjectName("gac_curve_preset")
+            self.gac_curve.setToolTip("Transfer curve: gamma 1.0 (linear), gamma 2.2 or sRGB")
+            for label in _GAC_PRESETS:
+                self.gac_curve.addItem(label)
+            self.gac_curve.addItem("Custom")
+            self.gac_curve.activated.connect(self._on_gac_preset)
+            form.insertRow(0, "Curve", self.gac_curve)
+            self.gac_gain_label = QLabel("Applied gain: –")
+            form.addRow(self.gac_gain_label)
+
         self.error_label = QLabel()
         self.error_label.setStyleSheet("color: #d04040;")
         self.error_label.setWordWrap(True)
@@ -149,6 +171,7 @@ class ModuleBox(QFrame):
             editor.blockSignals(False)
         self.error_label.hide()
         self._update_awb_state()
+        self._update_gac_state()
 
     def set_effective(self, enabled: bool, blocked_by: list[str]) -> None:
         """Show the effective enabled state; greyed out when a prerequisite is disabled."""
@@ -176,6 +199,7 @@ class ModuleBox(QFrame):
         self.error_label.hide()
         self.params = params
         self._update_awb_state()
+        self._update_gac_state()
         self.params_edited.emit(self.name, params)
 
     def _update_awb_state(self) -> None:
@@ -210,6 +234,37 @@ class ModuleBox(QFrame):
         params = type(self.params).model_validate(data)
         self.set_params(params)
         self.params_edited.emit(self.name, params)
+
+    def set_gac_gain(self, gain: float) -> None:
+        if self.name == "gac":
+            self.gac_gain_label.setText(f"Applied gain: {gain:.3f}")
+
+    def _on_gac_preset(self, index: int) -> None:
+        label = self.gac_curve.itemText(index)
+        self._gac_custom = label == "Custom"
+        if self._gac_custom:
+            self._update_gac_state()
+            return
+        self.apply_params(_GAC_PRESETS[label])
+
+    def _update_gac_state(self) -> None:
+        if self.name != "gac":
+            return
+        params = self.params
+        assert isinstance(params, GACParams)
+        curve, gamma = params.curve, params.gamma
+        label = "Custom"
+        if not self._gac_custom:
+            for name, values in _GAC_PRESETS.items():
+                if values["curve"] == curve and (curve == "srgb" or values["gamma"] == gamma):
+                    label = name
+        self._gac_custom = label == "Custom"
+        self.gac_curve.blockSignals(True)
+        self.gac_curve.setCurrentText(label)
+        self.gac_curve.blockSignals(False)
+        self.editors["gamma"].setEnabled(self._gac_custom)
+        self.editors["gain"].setEnabled(not params.auto_gain)
+        self.editors["auto_gain_clip"].setEnabled(params.auto_gain)
 
     def set_report(self, text: str) -> None:
         """Show a per-run measurement, such as the pixels DPC corrected."""
@@ -349,6 +404,9 @@ class ModulePanel(QScrollArea):
 
     def set_stats(self, stats: dict[str, object], *, preview_factor: int = 1) -> None:
         """Show the measurements a run reported (currently the DPC pixel count)."""
+        gain = stats.get("gac_gain")
+        if isinstance(gain, float):
+            self.boxes["gac"].set_gac_gain(gain)
         corrected = stats.get("dpc_corrected")
         total = stats.get("dpc_total")
         if isinstance(corrected, int) and isinstance(total, int) and total:
