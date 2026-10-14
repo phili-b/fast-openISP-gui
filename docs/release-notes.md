@@ -1,5 +1,17 @@
 # Release notes
 
+## v0.4.0 - gamma and gain, reference swatches
+
+**Gamma and Gain.** The gamma module is now *Gamma and Gain*: a **transfer curve** choice
+(power law or sRGB) and an **automatic gain** that picks the gain from the image, with a
+configurable percentage of pixels allowed to clip.
+
+**Reference color checker display.** **View -> Show reference color checker colors** detects the
+chart and overlays the sRGB reference color on every patch for a visual comparison.
+
+- `connan_raw14` is now the default image and config, shipped with the release.
+- Documentation: before/after calibration example.
+
 ## v0.3.0 - color checker calibration
 
 **Fit the color correction matrix on a ColorChecker.** The CCM module has a new

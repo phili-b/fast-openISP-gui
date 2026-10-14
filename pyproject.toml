@@ -1,6 +1,6 @@
 [project]
 name = "fast-openisp"
-version = "0.3.0"
+version = "0.4.0"
 description = "Fast software ISP (image signal processor) in Python, with a desktop GUI"
 readme = "README.md"
 requires-python = ">=3.13"
